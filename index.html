@@ -3,98 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>七米外倉品項彙整系統</title>
+    <title>外倉管理系統 - 專業進階版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
-<body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
+<body class="bg-slate-100 p-4 font-sans text-slate-900">
 
-    <div id="app" class="max-w-2xl mx-auto pb-10">
-        <!-- 標題 -->
-        <div class="bg-indigo-900 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-indigo-500 text-center">
-            <h1 class="text-2xl font-bold tracking-widest">外倉品項彙整系統</h1>
-            <p class="text-indigo-300 text-xs mt-1">同品項多批次自動合併統計</p>
+    <div id="app" class="max-w-2xl mx-auto pb-20">
+        <!-- 頂部標題與總量摘要 -->
+        <div class="bg-indigo-900 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-indigo-500 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold tracking-widest">外倉效期管理</h1>
+                <p class="text-indigo-300 text-xs mt-1">專業回報與存檔工具</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-indigo-300 uppercase font-bold">全倉合計</p>
+                <p class="text-4xl font-black">{{ grandTotal }} <small class="text-sm">箱</small></p>
+            </div>
         </div>
 
         <div class="bg-white p-6 rounded-b-2xl shadow-xl space-y-6">
             
-            <!-- 品項新增/管理 -->
+            <!-- 品項清單管理 -->
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase italic">自定義品項擴充</label>
                 <div class="flex gap-2">
-                    <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="輸入新品項..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-inner">
-                    <button @click="addProductType" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all text-sm">
-                        新增
-                    </button>
+                    <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="自定義新品項..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <button @click="addProductType" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700">新增</button>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <span v-for="type in productTypes" :key="type" class="bg-white border border-slate-300 px-2 py-1 rounded text-[10px] flex items-center shadow-sm font-bold text-slate-600">
+                        {{ type }}
+                        <button @click="removeProductType(type)" class="text-red-400 ml-1 font-bold hover:text-red-600">×</button>
+                    </span>
                 </div>
             </div>
 
-            <!-- 快速新增按鈕區 -->
-            <div>
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase italic">選擇品項建立紀錄</label>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <button v-for="type in productTypes" :key="type" @click="addRecord(type)" 
-                            class="bg-white border border-indigo-200 hover:border-indigo-600 text-indigo-700 font-bold py-2 px-1 rounded-lg shadow-sm transition-all text-xs sm:text-sm active:scale-95">
-                        + {{ type }}
-                    </button>
-                </div>
+            <!-- 品項快速按鈕 -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                <button v-for="type in productTypes" :key="type" @click="addRecord(type)" 
+                        class="bg-indigo-50 border border-indigo-200 hover:border-indigo-600 text-indigo-800 font-bold py-2 rounded-lg text-xs transition-all active:scale-95">
+                    + {{ type }}
+                </button>
             </div>
 
             <hr class="border-slate-100">
 
-            <!-- 填寫區域 -->
+            <!-- 填寫清單 -->
             <div class="space-y-4">
                 <transition-group name="list">
-                    <div v-for="(item, index) in records" :key="item.id" class="p-4 bg-white border-2 border-slate-50 rounded-xl relative shadow-sm border-l-4 border-l-indigo-400">
-                        <button @click="removeRecord(index)" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs font-bold">
-                            移除
-                        </button>
+                    <div v-for="(item, index) in records" :key="item.id" 
+                         class="p-4 rounded-xl border-2 transition-all relative shadow-sm"
+                         :class="getWarningStyle(item.expiry)">
+                        
+                        <button @click="removeRecord(index)" class="absolute top-2 right-3 text-slate-300 hover:text-red-500 font-bold">移除</button>
                         
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="font-bold text-indigo-900">{{ item.name }}</span>
+                            <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                            <span class="font-black text-slate-700">{{ item.name }}</span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">七米數量 (箱)</label>
-                                <input type="number" v-model.number="item.qty" placeholder="0" class="w-full border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-lg font-mono">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">七米箱數</label>
+                                <input type="number" v-model.number="item.qty" placeholder="0" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-xl font-mono">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase text-indigo-500 tracking-tighter">到期日期</label>
-                                <input type="date" v-model="item.expiry" class="w-full border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-sm">
+                                <label class="block text-[10px] font-bold text-indigo-400 mb-1 uppercase">到期日 (不可選過去)</label>
+                                <input type="date" v-model="item.expiry" @change="validateDate(item)" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-sm">
                             </div>
                         </div>
+                        <p v-if="item.expiry" class="text-[10px] mt-2 font-bold text-slate-400 uppercase tracking-tighter">
+                            ⏱️ 距離效期：{{ calculateDays(item.expiry) }} 天
+                        </p>
                     </div>
                 </transition-group>
             </div>
 
-            <!-- 無資料 -->
-            <div v-if="records.length === 0" class="text-center py-10 text-slate-300 italic text-sm border-2 border-dashed border-slate-100 rounded-xl">
-                尚未新增任何回報品項
-            </div>
-
-            <!-- 功能按鈕 -->
+            <!-- 操作按鈕區 -->
             <div class="pt-6 space-y-3">
                 <button @click="copyToClipboard" :disabled="records.length === 0" 
                         class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    一鍵複製「品項彙整」訊息
+                    一鍵複製品項彙整訊息
                 </button>
                 
-                <button @click="clearAllRecords" v-if="records.length > 0"
-                        class="w-full bg-white border border-red-200 text-red-500 hover:bg-red-50 font-bold py-2 rounded-xl transition-all text-sm">
-                    🗑️ 清除所有填寫內容
-                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="exportToExcel" :disabled="records.length === 0"
+                            class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                        📊 匯出 Excel 檔
+                    </button>
+                    <button @click="clearAllRecords" v-if="records.length > 0"
+                            class="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 font-bold py-2 rounded-xl text-sm transition-all">
+                        🗑️ 清除所有填寫
+                    </button>
+                </div>
 
                 <p v-if="copyStatus" class="text-center text-green-600 font-bold text-sm animate-pulse">✅ 已合併品項並複製成功！</p>
             </div>
 
             <!-- 訊息預覽 -->
             <div class="bg-slate-800 rounded-xl p-5 mt-6 shadow-inner border border-slate-700">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center italic">LINE 彙整格式預覽</p>
-                <div class="text-slate-300 text-xs font-mono whitespace-pre-wrap leading-relaxed">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center italic">LINE 回報格式預覽</p>
+                <div class="text-slate-300 text-[11px] font-mono whitespace-pre-wrap leading-relaxed">
                     {{ summaryContent || '等待資料輸入...' }}
                 </div>
             </div>
@@ -103,7 +112,7 @@
 
     <style>
         .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
-        .list-enter-from, .list-leave-to { opacity: 0; transform: translateX(30px); }
+        .list-enter-from, .list-leave-to { opacity: 0; transform: scale(0.9); }
     </style>
 
     <script>
@@ -113,46 +122,92 @@
                 return {
                     newProductName: '',
                     copyStatus: false,
-                    productTypes: ['巧克力雪捲', '牛奶雪捲', '大冰', '藍冰', '綠冰', '紅冰'],
-                    records: []
+                    // 預設品項
+                    productTypes: JSON.parse(localStorage.getItem('savedProductTypes')) || ['巧克力雪捲', '牛奶雪捲', '大冰', '藍冰', '綠冰', '紅冰'],
+                    // 資料紀錄
+                    records: JSON.parse(localStorage.getItem('savedRecords')) || []
                 }
             },
+            watch: {
+                // 自動儲存資料至瀏覽器
+                records: { handler() { this.saveData(); }, deep: true },
+                productTypes: { handler() { this.saveData(); }, deep: true }
+            },
             computed: {
+                grandTotal() {
+                    return this.records.reduce((sum, r) => sum + (r.qty || 0), 0);
+                },
                 summaryContent() {
                     const validRecords = this.records.filter(r => r.expiry);
                     if (validRecords.length === 0) return "";
-
-                    // --- 品項彙整邏輯 ---
+                    
                     const grouped = {};
                     validRecords.forEach(r => {
-                        if (!grouped[r.name]) {
-                            grouped[r.name] = { total: 0, details: [] };
-                        }
+                        if (!grouped[r.name]) grouped[r.name] = { total: 0, details: [] };
                         const qty = r.qty || 0;
                         grouped[r.name].total += qty;
                         grouped[r.name].details.push({ qty, expiry: r.expiry });
                     });
 
                     const now = new Date();
-                    const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
-                    
-                    let text = `📦 【七米寄庫品項總量回報】\n日期：${timeStr}\n━━━━━━━━━━━━━━━\n`;
-                    
+                    let text = `📦 【七米寄庫品項總量回報】\n日期：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}\n━━━━━━━━━━━━━━━\n`;
                     for (const name in grouped) {
                         text += `■ ${name} (總計：${grouped[name].total} 箱)\n`;
-                        // 依日期排序，確保訊息內的效期由遠到近排列
                         grouped[name].details.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
                         grouped[name].details.forEach(d => {
                             text += `　- ${d.qty} 箱 (效期: ${d.expiry})\n`;
                         });
-                        text += `\n`; // 品項間留空行
+                        text += `\n`;
                     }
-                    
-                    text += `━━━━━━━━━━━━━━━\n⚠️ 以上資料供幹部管理外倉需求`;
+                    text += `━━━━━━━━━━━━━━━\n全倉合計：${this.grandTotal} 箱\n⚠️ 以上資料供幹部管理外倉需求`;
                     return text.trim();
                 }
             },
             methods: {
+                // 1. 檢查日期：禁止過去日期
+                validateDate(item) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // 取得今天午夜時間
+                    const inputDate = new Date(item.expiry);
+                    
+                    if (item.expiry && inputDate < today) {
+                        alert("⚠️ 錯誤：不可選擇過期的日期！");
+                        item.expiry = ''; // 重置為空
+                    }
+                },
+                // 2. 匯出 Excel (CSV)
+                exportToExcel() {
+                    if (this.records.length === 0) return;
+                    
+                    // 加入 BOM \uFEFF 以確保 Excel 開啟時繁體中文不亂碼
+                    let csvContent = "\uFEFF品項,七米數量(箱),到期日\n";
+                    this.records.forEach(r => {
+                        csvContent += `${r.name},${r.qty || 0},${r.expiry || '未填'}\n`;
+                    });
+                    
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    const dateTag = new Date().toLocaleDateString().replace(/\//g, '-');
+                    
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `外倉寄庫回報_${dateTag}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+                calculateDays(date) {
+                    const diff = new Date(date) - new Date();
+                    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+                },
+                getWarningStyle(expiry) {
+                    if (!expiry) return 'bg-white border-slate-100';
+                    const days = this.calculateDays(expiry);
+                    if (days <= 30) return 'bg-red-50 border-red-200';
+                    if (days <= 90) return 'bg-amber-50 border-amber-200';
+                    return 'bg-green-50 border-green-200';
+                },
                 addProductType() {
                     const name = this.newProductName.trim();
                     if (name && !this.productTypes.includes(name)) {
@@ -160,34 +215,25 @@
                         this.newProductName = '';
                     }
                 },
+                removeProductType(type) { this.productTypes = this.productTypes.filter(t => t !== type); },
                 addRecord(name) {
-                    this.records.push({
-                        id: Date.now() + Math.random(),
-                        name: name,
-                        qty: null,
-                        expiry: ''
-                    });
+                    this.records.push({ id: Date.now() + Math.random(), name, qty: null, expiry: '' });
                 },
-                removeRecord(index) {
-                    this.records.splice(index, 1);
+                removeRecord(index) { this.records.splice(index, 1); },
+                saveData() {
+                    localStorage.setItem('savedProductTypes', JSON.stringify(this.productTypes));
+                    localStorage.setItem('savedRecords', JSON.stringify(this.records));
                 },
                 clearAllRecords() {
-                    if (confirm("確定要清除所有紀錄嗎？")) {
-                        this.records = [];
-                    }
+                    if (confirm("確定要清空目前填寫的所有資料嗎？")) { this.records = []; }
                 },
                 async copyToClipboard() {
-                    if (!this.summaryContent) {
-                        alert("請先填寫效期日期");
-                        return;
-                    }
+                    if (!this.summaryContent) { alert("請先填寫效期日期"); return; }
                     try {
                         await navigator.clipboard.writeText(this.summaryContent);
                         this.copyStatus = true;
                         setTimeout(() => this.copyStatus = false, 2000);
-                    } catch (err) {
-                        alert("複製失敗");
-                    }
+                    } catch (err) { alert("複製失敗"); }
                 }
             }
         }).mount('#app')
