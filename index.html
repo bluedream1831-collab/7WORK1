@@ -3,65 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>外倉效期管理系統 - 安全授權版</title>
+    <title>外倉效期管理 Pro - 內建手冊版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        [v-cloak] { display: none; }
+        .fade-enter-active, .fade-leave-active { transition: all 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-10px); }
+    </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-900">
 
-    <div id="app" class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="app" v-cloak class="min-h-screen flex flex-col items-center p-4">
         
-        <!-- 登入畫面 -->
-        <div v-if="!isAuthorized" class="w-full max-w-sm bg-white p-8 rounded-2xl shadow-2xl border border-gray-200">
+        <!-- 1. 登入畫面 -->
+        <div v-if="!isAuthorized" class="mt-20 w-full max-w-sm bg-white p-8 rounded-2xl shadow-2xl border border-gray-200">
             <div class="text-center mb-6">
-                <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor font-bold">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <h2 class="text-xl font-bold text-slate-800">請輸入管理密碼</h2>
-                <p class="text-xs text-slate-400 mt-1">當日僅需輸入一次</p>
+                <h2 class="text-xl font-bold text-slate-800">外倉管理系統</h2>
+                <p class="text-xs text-slate-400 mt-1 text-center">請輸入管理密碼進入系統</p>
             </div>
-            
-            <input type="password" v-model="passwordInput" @keyup.enter="verifyPassword" placeholder="請輸入密碼"
-                   class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 text-center text-2xl tracking-[1em] mb-4 transition-all">
-            
+            <input type="password" v-model="passwordInput" @keyup.enter="verifyPassword" placeholder="888"
+                   class="w-full border-2 border-slate-100 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 text-center text-2xl tracking-[0.5em] mb-4 transition-all">
             <button @click="verifyPassword" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-95">
                 確認登入
             </button>
-            <p v-if="loginError" class="text-red-500 text-center text-sm font-bold mt-4 animate-bounce">❌ 密碼錯誤，請重試</p>
+            <p v-if="loginError" class="text-red-500 text-center text-sm font-bold mt-4 animate-pulse">❌ 密碼錯誤</p>
         </div>
 
-        <!-- 主程式畫面 -->
+        <!-- 2. 主程式畫面 -->
         <div v-else class="w-full max-w-2xl">
-            <!-- 頂部標題 -->
-            <div class="bg-indigo-900 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-indigo-500 flex justify-between items-end">
-                <div>
+            
+            <!-- 頂部標題與總量摘要 -->
+            <div class="bg-indigo-900 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-indigo-500 flex justify-between items-end relative overflow-hidden">
+                <div class="relative z-10">
                     <h1 class="text-2xl font-bold tracking-widest">外倉效期管理</h1>
-                    <p class="text-indigo-300 text-[10px] mt-1 font-mono uppercase">Authorized: {{ authDate }}</p>
+                    <button @click="showHelp = !showHelp" class="mt-2 text-[10px] bg-indigo-800 hover:bg-indigo-700 px-3 py-1 rounded-full flex items-center gap-1 transition-colors border border-indigo-400">
+                        <span class="bg-indigo-400 text-indigo-900 rounded-full w-3 h-3 flex items-center justify-center font-bold">i</span>
+                        {{ showHelp ? '隱藏操作手冊' : '查看操作手冊' }}
+                    </button>
                 </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-indigo-300 uppercase font-bold tracking-tighter">全倉合計箱數</p>
-                    <p class="text-4xl font-black">{{ grandTotal }}</p>
+                <div class="text-right relative z-10">
+                    <p class="text-[10px] text-indigo-300 uppercase font-bold tracking-tighter">當前全倉合計</p>
+                    <p class="text-4xl font-black">{{ grandTotal }} <small class="text-xs">箱</small></p>
+                </div>
+                <!-- 背景裝飾 -->
+                <div class="absolute -right-4 -bottom-4 text-indigo-800 opacity-20 transform -rotate-12">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
                 </div>
             </div>
+
+            <!-- 隱藏式操作手冊 -->
+            <transition name="fade">
+                <div v-if="showHelp" class="bg-amber-50 border-x border-amber-200 p-5 text-sm text-amber-900 shadow-inner">
+                    <h3 class="font-bold mb-2 flex items-center gap-2 text-amber-700">📖 快速操作指引</h3>
+                    <ul class="space-y-2 text-xs leading-relaxed">
+                        <li><b class="text-amber-800">1. 新增：</b>點擊品項按鈕新增紀錄。若同一品項有不同效期，請點兩次。</li>
+                        <li><b class="text-amber-800">2. 輸入：</b>填入「七米箱數」與「效期日期」。系統會<span class="text-red-600 font-bold underline">自動攔截</span>過去的日期。</li>
+                        <li><b class="text-amber-800">3. 預警：</b>區塊變<span class="text-red-500">紅色</span>代表30天內到期，<span class="text-amber-500">黃色</span>為90天內。</li>
+                        <li><b class="text-amber-800">4. 回報：</b>點「一鍵複製」，系統會自動將相同品項合併並統計總數。</li>
+                        <li><b class="text-amber-800">5. 存檔：</b>利用「匯出 Excel」可下載 CSV 報表，方便後續電腦對帳。</li>
+                    </ul>
+                </div>
+            </transition>
 
             <div class="bg-white p-6 rounded-b-2xl shadow-xl space-y-6">
                 <!-- 品項新增 -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div class="flex gap-2">
-                        <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="新增品項..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-inner">
+                        <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="新增其他品項..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                         <button @click="addProductType" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold text-sm">新增</button>
                     </div>
                     <div class="flex flex-wrap gap-2 mt-3">
-                        <span v-for="type in productTypes" :key="type" class="bg-white border border-slate-300 px-2 py-1 rounded text-[10px] flex items-center shadow-sm font-bold text-slate-600 uppercase">
+                        <span v-for="type in productTypes" :key="type" class="bg-white border border-slate-300 px-2 py-1 rounded text-[10px] flex items-center shadow-sm font-bold text-slate-600">
                             {{ type }}
-                            <button @click="removeProductType(type)" class="text-red-300 ml-1 hover:text-red-600">×</button>
+                            <button @click="removeProductType(type)" class="text-red-300 ml-1 hover:text-red-600 font-bold">×</button>
                         </span>
                     </div>
                 </div>
 
-                <!-- 快速新增紀錄 -->
+                <!-- 品項快捷按鈕 -->
                 <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     <button v-for="type in productTypes" :key="type" @click="addRecord(type)" 
                             class="bg-indigo-50 border border-indigo-100 hover:border-indigo-600 text-indigo-800 font-bold py-2 rounded-lg text-xs transition-all active:scale-95">
@@ -71,62 +96,65 @@
 
                 <hr class="border-slate-100">
 
-                <!-- 回報清單 -->
+                <!-- 填寫紀錄清單 -->
                 <div class="space-y-4">
-                    <div v-for="(item, index) in records" :key="item.id" 
-                         class="p-4 rounded-xl border-2 transition-all relative shadow-sm"
-                         :class="getWarningStyle(item.expiry)">
-                        
-                        <button @click="removeRecord(index)" class="absolute top-2 right-3 text-slate-300 hover:text-red-500 font-bold text-sm">移除</button>
-                        
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
-                            <span class="font-black text-slate-700 text-sm">{{ item.name }}</span>
-                        </div>
+                    <transition-group name="fade">
+                        <div v-for="(item, index) in records" :key="item.id" 
+                             class="p-4 rounded-xl border-2 transition-all relative shadow-sm"
+                             :class="getWarningStyle(item.expiry)">
+                            
+                            <button @click="removeRecord(index)" class="absolute top-2 right-3 text-slate-300 hover:text-red-500 font-bold text-sm">移除</button>
+                            
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
+                                <span class="font-black text-slate-700">{{ item.name }}</span>
+                            </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tight">七米箱數</label>
-                                <input type="number" v-model.number="item.qty" placeholder="0" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-xl font-mono">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-indigo-400 mb-1 uppercase tracking-tight">到期日期</label>
-                                <input type="date" v-model="item.expiry" @change="validateDate(item)" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-sm">
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">七米箱數</label>
+                                    <input type="number" v-model.number="item.qty" placeholder="0" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-xl font-mono text-center">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-indigo-400 mb-1 uppercase tracking-tighter text-center">到期日期</label>
+                                    <input type="date" v-model="item.expiry" @change="validateDate(item)" class="w-full bg-transparent border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-sm">
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </transition-group>
                 </div>
 
-                <div v-if="records.length === 0" class="text-center py-10 text-slate-300 italic text-sm border-2 border-dashed border-slate-100 rounded-xl">
-                    等待品項加入清單...
+                <div v-if="records.length === 0" class="text-center py-10 text-slate-300 italic text-sm border-2 border-dashed border-slate-100 rounded-xl uppercase tracking-widest">
+                    Empty Records
                 </div>
 
-                <!-- 功能按鈕區 -->
+                <!-- 功能按鈕 -->
                 <div class="pt-6 space-y-3">
                     <button @click="copyToClipboard" :disabled="records.length === 0" 
                             class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                         一鍵複製品項彙整訊息
                     </button>
                     
                     <div class="grid grid-cols-2 gap-2">
                         <button @click="exportToExcel" :disabled="records.length === 0"
-                                class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
-                            📊 匯出 Excel 檔
+                                class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-bold py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+                            📊 匯出 Excel
                         </button>
                         <button @click="clearAllRecords" v-if="records.length > 0"
                                 class="bg-white border-2 border-red-100 text-red-500 hover:bg-red-50 font-bold py-2 rounded-xl text-sm transition-all">
-                            🗑️ 清除填寫紀錄
+                            🗑️ 清除填寫
                         </button>
                     </div>
 
-                    <p v-if="copyStatus" class="text-center text-green-600 font-bold text-sm animate-pulse">✅ 已合併品項並複製成功！</p>
+                    <p v-if="copyStatus" class="text-center text-green-600 font-bold text-sm animate-pulse">✅ 品項彙整複製成功！可至 Line 貼上</p>
                 </div>
 
                 <!-- 預覽區 -->
-                <div class="bg-slate-800 rounded-xl p-5 mt-4 border border-slate-700">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center">LINE 回報格式預覽</p>
+                <div class="bg-slate-900 rounded-xl p-5 mt-4 border border-slate-700 shadow-inner">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center italic">Message Preview</p>
                     <div class="text-slate-300 text-[11px] font-mono whitespace-pre-wrap leading-relaxed">
-                        {{ summaryContent || '等待資料...' }}
+                        {{ summaryContent || '等待資料輸入...' }}
                     </div>
                 </div>
             </div>
@@ -139,11 +167,11 @@
             data() {
                 return {
                     isAuthorized: false,
+                    showHelp: false,
                     passwordInput: '',
                     loginError: false,
-                    authDate: '',
-                    newProductName: '',
                     copyStatus: false,
+                    newProductName: '',
                     productTypes: JSON.parse(localStorage.getItem('savedProductTypes')) || ['巧克力雪捲', '牛奶雪捲', '大冰', '藍冰', '綠冰', '紅冰'],
                     records: JSON.parse(localStorage.getItem('savedRecords')) || []
                 }
@@ -186,22 +214,14 @@
                 }
             },
             methods: {
-                // 權限檢查邏輯
                 checkAuth() {
                     const today = new Date().toLocaleDateString();
-                    const savedDate = localStorage.getItem('authDate');
-                    if (savedDate === today) {
-                        this.isAuthorized = true;
-                        this.authDate = today;
-                    }
+                    if (localStorage.getItem('authDate') === today) this.isAuthorized = true;
                 },
                 verifyPassword() {
                     if (this.passwordInput === '888') {
-                        const today = new Date().toLocaleDateString();
-                        localStorage.setItem('authDate', today);
+                        localStorage.setItem('authDate', new Date().toLocaleDateString());
                         this.isAuthorized = true;
-                        this.authDate = today;
-                        this.loginError = false;
                     } else {
                         this.loginError = true;
                         this.passwordInput = '';
@@ -210,30 +230,25 @@
                 validateDate(item) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    const inputDate = new Date(item.expiry);
-                    if (item.expiry && inputDate < today) {
-                        alert("⚠️ 錯誤：不可選擇過期的日期！");
+                    if (item.expiry && new Date(item.expiry) < today) {
+                        alert("⚠️ 錯誤：不可回報過期的效期！");
                         item.expiry = '';
                     }
                 },
                 exportToExcel() {
-                    let csvContent = "\uFEFF品項,七米數量(箱),到期日\n";
-                    this.records.forEach(r => {
-                        csvContent += `${r.name},${r.qty || 0},${r.expiry || '未填'}\n`;
-                    });
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const url = URL.createObjectURL(blob);
+                    let csv = "\uFEFF品項,數量(箱),效期\n";
+                    this.records.forEach(r => { csv += `${r.name},${r.qty || 0},${r.expiry || '未填'}\n`; });
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement("a");
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", `外倉報表_${new Date().toLocaleDateString()}.csv`);
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `外倉彙整_${new Date().toLocaleDateString()}.csv`;
                     link.click();
                 },
                 getWarningStyle(expiry) {
                     if (!expiry) return 'bg-white border-slate-100';
-                    const diff = new Date(expiry) - new Date();
-                    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    if (days <= 30) return 'bg-red-50 border-red-200';
-                    if (days <= 90) return 'bg-amber-50 border-amber-200';
+                    const diff = (new Date(expiry) - new Date()) / (1000 * 60 * 60 * 24);
+                    if (diff <= 30) return 'bg-red-50 border-red-200';
+                    if (diff <= 90) return 'bg-amber-50 border-amber-200';
                     return 'bg-green-50 border-green-200';
                 },
                 addProductType() {
