@@ -3,106 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>外倉效期管理系統</title>
+    <title>七米外倉品項彙整系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
-<body class="bg-gray-100 p-4 md:p-8 font-sans">
+<body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
 
     <div id="app" class="max-w-2xl mx-auto pb-10">
-        <!-- 標題區 -->
-        <div class="bg-slate-700 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-blue-500 text-center">
-            <h1 class="text-2xl font-bold tracking-wider text-blue-100">外倉效期管理回報</h1>
+        <!-- 標題 -->
+        <div class="bg-indigo-900 text-white p-6 rounded-t-2xl shadow-lg border-b-4 border-indigo-500 text-center">
+            <h1 class="text-2xl font-bold tracking-widest">外倉品項彙整系統</h1>
+            <p class="text-indigo-300 text-xs mt-1">同品項多批次自動合併統計</p>
         </div>
 
         <div class="bg-white p-6 rounded-b-2xl shadow-xl space-y-6">
             
-            <!-- 管理自定義品項 -->
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase italic">自定義品項擴充</label>
+            <!-- 品項新增/管理 -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase italic">自定義品項擴充</label>
                 <div class="flex gap-2">
-                    <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="輸入其他品項名稱..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-inner">
-                    <button @click="addProductType" class="bg-slate-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-700 transition-all text-sm">
+                    <input type="text" v-model="newProductName" @keyup.enter="addProductType" placeholder="輸入新品項..." class="flex-1 border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-inner">
+                    <button @click="addProductType" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all text-sm">
                         新增
                     </button>
                 </div>
             </div>
 
-            <!-- 操作按鈕：快速新增紀錄 -->
+            <!-- 快速新增按鈕區 -->
             <div>
-                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase italic">選擇品項新增紀錄 (可同品項多效期)</label>
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase italic">選擇品項建立紀錄</label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <button v-for="type in productTypes" :key="type" @click="addRecord(type)" 
-                            class="bg-blue-50 border border-blue-200 hover:border-blue-600 text-blue-800 font-bold py-2 px-1 rounded-lg shadow-sm transition-all text-xs sm:text-sm active:scale-95">
+                            class="bg-white border border-indigo-200 hover:border-indigo-600 text-indigo-700 font-bold py-2 px-1 rounded-lg shadow-sm transition-all text-xs sm:text-sm active:scale-95">
                         + {{ type }}
                     </button>
                 </div>
             </div>
 
-            <hr class="border-gray-100">
+            <hr class="border-slate-100">
 
-            <!-- 回報紀錄清單 -->
+            <!-- 填寫區域 -->
             <div class="space-y-4">
-                <transition-group name="fade">
-                    <div v-for="(item, index) in records" :key="item.id" class="p-4 bg-white border-2 border-slate-50 rounded-xl relative shadow-sm border-l-4 border-l-blue-500">
-                        <button @click="removeRecord(index)" class="absolute top-2 right-2 text-red-300 hover:text-red-500 text-xs font-bold">
+                <transition-group name="list">
+                    <div v-for="(item, index) in records" :key="item.id" class="p-4 bg-white border-2 border-slate-50 rounded-xl relative shadow-sm border-l-4 border-l-indigo-400">
+                        <button @click="removeRecord(index)" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 text-xs font-bold">
                             移除
                         </button>
                         
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="font-black text-slate-700">{{ item.name }}</span>
+                            <span class="font-bold text-indigo-900">{{ item.name }}</span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">七米寄庫數量 (箱)</label>
-                                <input type="number" v-model.number="item.qty" placeholder="0" class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none text-lg font-mono">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">七米數量 (箱)</label>
+                                <input type="number" v-model.number="item.qty" placeholder="0" class="w-full border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-lg font-mono">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase text-blue-500">到期日期</label>
-                                <input type="date" v-model="item.expiry" class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none text-sm">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase text-indigo-500 tracking-tighter">到期日期</label>
+                                <input type="date" v-model="item.expiry" class="w-full border-b border-slate-200 py-1 focus:border-indigo-500 outline-none text-sm">
                             </div>
                         </div>
                     </div>
                 </transition-group>
             </div>
 
-            <!-- 無資料提示 -->
-            <div v-if="records.length === 0" class="text-center py-10 text-gray-400 italic text-sm border-2 border-dashed border-gray-100 rounded-xl">
-                請點擊上方品項按鈕來建立回報清單
+            <!-- 無資料 -->
+            <div v-if="records.length === 0" class="text-center py-10 text-slate-300 italic text-sm border-2 border-dashed border-slate-100 rounded-xl">
+                尚未新增任何回報品項
             </div>
 
-            <!-- 功能按鈕區 -->
+            <!-- 功能按鈕 -->
             <div class="pt-6 space-y-3">
                 <button @click="copyToClipboard" :disabled="records.length === 0" 
-                        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                     </svg>
-                    一鍵複製回報訊息
+                    一鍵複製「品項彙整」訊息
                 </button>
                 
                 <button @click="clearAllRecords" v-if="records.length > 0"
                         class="w-full bg-white border border-red-200 text-red-500 hover:bg-red-50 font-bold py-2 rounded-xl transition-all text-sm">
-                    🗑️ 清除所有已填紀錄
+                    🗑️ 清除所有填寫內容
                 </button>
 
-                <p v-if="copyStatus" class="text-center text-green-600 font-bold text-sm animate-pulse">✅ 訊息已複製，可直接至 Line 貼上</p>
+                <p v-if="copyStatus" class="text-center text-green-600 font-bold text-sm animate-pulse">✅ 已合併品項並複製成功！</p>
             </div>
 
             <!-- 訊息預覽 -->
             <div class="bg-slate-800 rounded-xl p-5 mt-6 shadow-inner border border-slate-700">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center">LINE 回報格式預覽</p>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 text-center italic">LINE 彙整格式預覽</p>
                 <div class="text-slate-300 text-xs font-mono whitespace-pre-wrap leading-relaxed">
-                    {{ summaryContent || '尚未產生資料...' }}
+                    {{ summaryContent || '等待資料輸入...' }}
                 </div>
             </div>
         </div>
     </div>
 
     <style>
-        .fade-enter-active, .fade-leave-active { transition: all 0.3s ease; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(10px); }
+        .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
+        .list-enter-from, .list-leave-to { opacity: 0; transform: translateX(30px); }
     </style>
 
     <script>
@@ -112,9 +113,7 @@
                 return {
                     newProductName: '',
                     copyStatus: false,
-                    // 預設品項清單
                     productTypes: ['巧克力雪捲', '牛奶雪捲', '大冰', '藍冰', '綠冰', '紅冰'],
-                    // 填寫紀錄
                     records: []
                 }
             },
@@ -123,20 +122,34 @@
                     const validRecords = this.records.filter(r => r.expiry);
                     if (validRecords.length === 0) return "";
 
+                    // --- 品項彙整邏輯 ---
+                    const grouped = {};
+                    validRecords.forEach(r => {
+                        if (!grouped[r.name]) {
+                            grouped[r.name] = { total: 0, details: [] };
+                        }
+                        const qty = r.qty || 0;
+                        grouped[r.name].total += qty;
+                        grouped[r.name].details.push({ qty, expiry: r.expiry });
+                    });
+
                     const now = new Date();
                     const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
                     
-                    let text = `📦 【七米寄庫效期回報】\n日期：${timeStr}\n━━━━━━━━━━━━━━━\n`;
+                    let text = `📦 【七米寄庫品項總量回報】\n日期：${timeStr}\n━━━━━━━━━━━━━━━\n`;
                     
-                    validRecords.forEach((r, idx) => {
-                        text += `${idx + 1}. 品項：${r.name}\n`;
-                        text += `　 七米數量：${r.qty || 0} 箱\n`;
-                        text += `　 效期：${r.expiry}\n`;
-                        text += `┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n`;
-                    });
+                    for (const name in grouped) {
+                        text += `■ ${name} (總計：${grouped[name].total} 箱)\n`;
+                        // 依日期排序，確保訊息內的效期由遠到近排列
+                        grouped[name].details.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+                        grouped[name].details.forEach(d => {
+                            text += `　- ${d.qty} 箱 (效期: ${d.expiry})\n`;
+                        });
+                        text += `\n`; // 品項間留空行
+                    }
                     
-                    text += `⚠️ 以上資料供幹部管理外倉需求`;
-                    return text;
+                    text += `━━━━━━━━━━━━━━━\n⚠️ 以上資料供幹部管理外倉需求`;
+                    return text.trim();
                 }
             },
             methods: {
@@ -159,13 +172,13 @@
                     this.records.splice(index, 1);
                 },
                 clearAllRecords() {
-                    if (confirm("確定要清除目前所有填寫的內容嗎？")) {
+                    if (confirm("確定要清除所有紀錄嗎？")) {
                         this.records = [];
                     }
                 },
                 async copyToClipboard() {
                     if (!this.summaryContent) {
-                        alert("請先填寫『到期日期』才能產生訊息！");
+                        alert("請先填寫效期日期");
                         return;
                     }
                     try {
@@ -173,7 +186,7 @@
                         this.copyStatus = true;
                         setTimeout(() => this.copyStatus = false, 2000);
                     } catch (err) {
-                        alert("複製失敗，請手動複製下方預覽區文字");
+                        alert("複製失敗");
                     }
                 }
             }
