@@ -26,7 +26,7 @@
                        placeholder="請輸入管理代碼"
                        class="w-full border-2 border-slate-100 rounded-2xl px-4 py-4 outline-none focus:border-indigo-500 text-center text-xl mb-4 transition-all tracking-widest">
                 <button @click="verifyPassword" class="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl active:scale-95 transition-all">登入系統</button>
-                <p v-if="loginError" class="text-red-500 text-center text-xs mt-4 font-bold">代碼錯誤</p>
+                <p v-if="loginError" class="text-red-500 text-center text-xs mt-4 font-bold">驗證碼錯誤</p>
             </div>
         </div>
 
@@ -37,31 +37,31 @@
             <div class="sticky top-0 z-30 bg-slate-900 text-white px-4 py-3 shadow-lg flex justify-between items-center border-b border-indigo-500/30">
                 <div class="flex flex-col">
                     <h1 class="text-base font-bold tracking-tight">外倉效期管理</h1>
-                    <span class="text-[9px] text-slate-400 font-mono tracking-wider italic">Expiry Tracking System</span>
+                    <span class="text-[9px] text-slate-400 font-mono tracking-wider italic font-bold">品號核對系統</span>
                 </div>
                 <div class="flex items-center gap-2 text-[10px]">
-                    <button @click="showHelp = !showHelp" class="bg-slate-800 border border-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1">💡 說明</button>
-                    <button @click="clearAllRecords" class="bg-red-900/40 border border-red-800 text-red-200 px-2 py-1.5 rounded-lg flex items-center gap-1">🗑️ 清空</button>
+                    <button @click="showHelp = !showHelp" class="bg-slate-800 border border-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">💡 說明</button>
+                    <button @click="clearAllRecords" class="bg-red-900/40 border border-red-800 text-red-200 px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">🗑️ 清空</button>
                 </div>
             </div>
 
             <!-- 操作手冊 -->
             <div v-if="showHelp" class="bg-indigo-50 p-4 text-[11px] text-indigo-900 border-b border-indigo-100 leading-relaxed shadow-inner">
-                <p class="font-bold mb-1 italic">📖 快速指引：</p>
-                1. 點擊商品按鈕新增紀錄（支援同品項多效期）。<br>
-                2. 填寫數量與效期（<span class="text-red-600 font-bold">系統禁止填寫過期日</span>）。<br>
+                <p class="font-bold mb-1 italic underline">📖 操作手冊：</p>
+                1. 點擊品號按鈕新增紀錄（支援同品號多效期）。<br>
+                2. 填寫箱數與效期（<span class="text-red-600 font-bold">禁止填寫今日以前日期</span>）。<br>
                 3. 背景警示：<span class="text-red-500 font-bold">紅(30天內)</span>、<span class="text-amber-600 font-bold">黃(90天內)</span>。<br>
-                4. 點擊底部按鈕一鍵匯出訊息或 Excel。
+                4. 點擊底部按鈕一鍵複製 LINE 彙整訊息。
             </div>
 
             <div class="p-4 space-y-4">
                 <!-- 商品快速選擇按鈕 -->
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest text-center">點擊品項按鈕新增回報紀錄</label>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest text-center">點擊品號按鈕開始回報</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button v-for="p in productMaster" :key="p.id" @click="addRecord(p)" 
-                                class="bg-white border border-slate-200 active:bg-indigo-600 active:text-white text-left p-3 rounded-xl shadow-sm transition-all flex flex-col">
-                            <span class="text-[9px] font-mono text-indigo-500 leading-none mb-1 tracking-tighter font-bold">CODE: {{ p.id }}</span>
+                                class="bg-white border border-slate-200 active:bg-indigo-600 active:text-white text-left p-3 rounded-xl shadow-sm transition-all flex flex-col hover:border-indigo-300">
+                            <span class="text-[9px] font-mono text-indigo-500 leading-none mb-1 tracking-tighter font-bold uppercase">品號: {{ p.id }}</span>
                             <span class="text-[11px] font-bold text-slate-700 leading-tight">{{ p.name }}</span>
                         </button>
                     </div>
@@ -69,13 +69,13 @@
 
                 <!-- 自定義品項 -->
                 <div class="flex gap-2">
-                    <input type="text" v-model="customProductName" placeholder="新增其他品項..." class="flex-1 bg-slate-200 border-0 rounded-xl px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-300">
+                    <input type="text" v-model="customProductName" placeholder="新增其他品項名稱..." class="flex-1 bg-slate-200 border-0 rounded-xl px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-300">
                     <button @click="addCustomProduct" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md">新增</button>
                 </div>
 
                 <hr class="border-slate-200">
 
-                <!-- 回報清單 (已移除總合計展示) -->
+                <!-- 回報清單 -->
                 <div class="space-y-3">
                     <transition-group name="list">
                         <div v-for="(item, index) in records" :key="item.key" 
@@ -84,7 +84,7 @@
                             
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex flex-col">
-                                    <span class="text-[10px] font-mono text-slate-400 font-bold">NO.{{ item.id }}</span>
+                                    <span class="text-[10px] font-mono text-slate-400 font-bold">品號: {{ item.id }}</span>
                                     <span class="font-black text-slate-800 text-sm leading-tight italic">{{ item.name }}</span>
                                 </div>
                                 <button @click="removeRecord(index)" class="text-red-400 text-[10px] font-bold border border-red-100 px-2 py-0.5 rounded-md shadow-sm bg-white/50">移除</button>
@@ -105,14 +105,14 @@
                 </div>
 
                 <div v-if="records.length === 0" class="text-center py-12 text-slate-300 italic text-sm border-2 border-dashed border-slate-200 rounded-3xl">
-                    等待資料錄入中...
+                    尚未選取商品品號...
                 </div>
 
                 <!-- 預覽區 -->
                 <div class="bg-slate-900 rounded-2xl p-5 mt-4 border border-slate-800 shadow-2xl">
                     <p class="text-[9px] text-slate-500 font-bold uppercase mb-3 text-center tracking-widest italic">LINE 回報格式預覽</p>
                     <div class="text-slate-400 text-[10px] font-mono whitespace-pre-wrap leading-tight">
-                        {{ summaryContent || '尚無有效效期資料可彙整...' }}
+                        {{ summaryContent || '等待資料輸入中...' }}
                     </div>
                 </div>
             </div>
@@ -126,10 +126,10 @@
                 </button>
             </div>
 
-            <!-- 複製提示彈窗 -->
+            <!-- 複製提示 -->
             <transition name="fade">
                 <div v-if="copyStatus" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/80 text-white px-8 py-4 rounded-3xl font-bold shadow-2xl text-center">
-                    已成功彙整並複製
+                    已成功複製彙整訊息
                 </div>
             </transition>
         </div>
@@ -146,7 +146,7 @@
                     loginError: false,
                     copyStatus: false,
                     customProductName: '',
-                    // 17 項商品 (已精簡名稱)
+                    // 17 項商品 (移除統一字樣)
                     productMaster: [
                         { id: '033471', name: '冰戀雙旋冰淇淋-巧克力香草' },
                         { id: '303905', name: '原味本舖-紅豆牛奶冰棒' },
@@ -166,7 +166,7 @@
                         { id: '855411', name: '刨走族烏梅風味冰沙' },
                         { id: '977064', name: '瑞穗鮮乳紅豆雪糕' }
                     ],
-                    records: JSON.parse(localStorage.getItem('savedRecords_Warehouse_NoSum')) || []
+                    records: JSON.parse(localStorage.getItem('savedRecords_Warehouse_Final')) || []
                 }
             },
             mounted() { this.checkAuth(); },
@@ -201,11 +201,11 @@
             },
             methods: {
                 checkAuth() {
-                    if (localStorage.getItem('authDate_Warehouse_NoSum') === new Date().toLocaleDateString()) this.isAuthorized = true;
+                    if (localStorage.getItem('authDate_Warehouse_Final') === new Date().toLocaleDateString()) this.isAuthorized = true;
                 },
                 verifyPassword() {
                     if (this.passwordInput === '888') {
-                        localStorage.setItem('authDate_Warehouse_NoSum', new Date().toLocaleDateString());
+                        localStorage.setItem('authDate_Warehouse_Final', new Date().toLocaleDateString());
                         this.isAuthorized = true;
                     } else {
                         this.loginError = true;
@@ -216,7 +216,7 @@
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     if (item.expiry && new Date(item.expiry) < today) {
-                        alert("⚠️ 不可選擇過期日期！");
+                        alert("⚠️ 錯誤：禁止輸入過期日期！");
                         item.expiry = '';
                     }
                 },
@@ -226,7 +226,7 @@
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement("a");
                     link.href = URL.createObjectURL(blob);
-                    link.download = `外倉效期回報_${new Date().toLocaleDateString()}.csv`;
+                    link.download = `外倉報表_${new Date().toLocaleDateString()}.csv`;
                     link.click();
                 },
                 getWarningStyle(expiry) {
@@ -241,13 +241,13 @@
                 },
                 addCustomProduct() {
                     if (this.customProductName.trim()) {
-                        this.records.push({ key: Date.now() + Math.random(), id: 'NEW', name: this.customProductName.trim(), qty: null, expiry: '' });
+                        this.records.push({ key: Date.now() + Math.random(), id: '手動', name: this.customProductName.trim(), qty: null, expiry: '' });
                         this.customProductName = '';
                     }
                 },
                 removeRecord(index) { this.records.splice(index, 1); },
-                saveData() { localStorage.setItem('savedRecords_Warehouse_NoSum', JSON.stringify(this.records)); },
-                clearAllRecords() { if (confirm("確定要清空目前填寫的所有資料嗎？")) this.records = []; },
+                saveData() { localStorage.setItem('savedRecords_Warehouse_Final', JSON.stringify(this.records)); },
+                clearAllRecords() { if (confirm("確定要清空目前所有填寫的資料嗎？")) this.records = []; },
                 async copyToClipboard() {
                     if (!this.summaryContent) return;
                     await navigator.clipboard.writeText(this.summaryContent);
