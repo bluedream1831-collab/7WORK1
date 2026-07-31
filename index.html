@@ -3,91 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>外倉商品預計運回商品表單</title>
-    <!-- 使用穩定 CDN 連結 -->
+    <title>外倉商品預計運回商品表單 - 最終更新版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <style>
         :root { --border-color: #333; --primary-color: #3498db; --secondary-color: #2ecc71; --accent-color: #e67e22; }
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f9; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
-        
-        /* 驗證層 */
-        #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #2c3e50; display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 3000; color: white;
-        }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
         .login-box { background: white; padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .login-box h2 { color: #333; margin: 0; text-align: center; font-size: 1.3rem; }
         .login-box input { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; outline: none; }
         .login-box button { padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
-
-        /* 主容器 */
         .app-container { max-width: 1000px; margin: 0 auto; padding-bottom: 50px; display: none; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         header h2 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
-        .btn-help { background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;}
-
-        /* 手冊彈窗 */
+        .btn-help { background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
         #help-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
-        .help-content { background: white; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; border-radius: 15px; padding: 25px; position: relative; }
-        .help-content h3 { margin-top: 0; color: var(--accent-color); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .help-content { background: white; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; border-radius: 15px; padding: 25px; }
         .help-close { background: #34495e; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; }
-
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 15px; }
         .card-title { font-weight: bold; margin-bottom: 12px; display: block; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #444; }
-
         .input-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .input-group { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.8rem; color: #888; font-weight: bold;}
-        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #fdfdfd; -webkit-appearance: none;}
+        label { font-size: 0.8rem; color: #888; font-weight: bold; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #fdfdfd; }
         .highlight-input { background-color: #fff9db !important; border: 1px solid #fab005; font-weight: bold; color: #d9480f; }
-
         .manage-item { display: flex; justify-content: space-between; align-items: center; background: #fcfcfc; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; }
-        .btn-del { background: #ff4d4f; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
-
+        .btn-del { background: #ff4d4f; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         button.btn-add { background: var(--secondary-color); color: white; grid-column: span 2; font-size: 1.1rem; padding: 16px; font-weight: bold; border:none; border-radius: 10px; }
-        .btn-img { background: #e74c3c; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold;}
-        .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold;}
-        .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; font-size: 0.9rem; border:none; border-radius: 10px;}
-
-        /* 表格預覽 */
+        .btn-img { background: #e74c3c; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; }
+        .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; }
+        .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; font-size: 0.9rem; border:none; border-radius: 10px; }
         .preview-container { overflow-x: auto; background: #ddd; padding: 10px; border-radius: 12px; margin-top: 20px; }
         #capture-area { width: 1000px; background: white; padding: 40px; margin: 0 auto; }
         .main-table { width: 100%; border-collapse: collapse; border: 2px solid var(--border-color); font-size: 18px; }
         .main-table th, .main-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 42px; }
         .main-table th { background-color: #f2f2f2; font-weight: bold; }
         .product-name { text-align: left; padding-left: 15px !important; width: 280px; }
-        .expiry-cell { font-size: 13px; text-align: left; vertical-align: top; white-space: pre-line; width: 210px; line-height: 1.3;}
+        .expiry-cell { font-size: 13px; text-align: left; vertical-align: top; white-space: pre-line; width: 210px; line-height: 1.3; }
         .footer-info { display: flex; border: 2px solid var(--border-color); border-top: none; }
-        .footer-left { flex: 5; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center;}
+        .footer-left { flex: 5; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
         .footer-right { flex: 2; }
         .footer-right table { width: 100%; border-collapse: collapse; }
-        .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px;}
+        .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px; }
         .bg-yellow { background-color: #ffff00 !important; }
     </style>
 </head>
 <body>
 
-<!-- 操作手冊彈窗 -->
 <div id="help-modal">
     <div class="help-content">
-        <h3>📖 操作說明手冊</h3>
-        <p><b>1. 當日免登入：</b>輸入 <b>888</b> 後，當天刷新網頁無需重登，隔日自動失效。</p>
-        <p><b>2. 智慧日期：</b>預設下一個工作天，改日期後星期自動跳轉。</p>
-        <p><b>3. 車趟計算：</b>預設 8 板為 1 趟，可點擊黃色框手動覆蓋數值。</p>
-        <p><b>4. Excel 匯出：</b>匯出之 Excel 採合併單元格設計，排版與圖檔一致。</p>
-        <button class="help-close" onclick="toggleHelp()">關閉說明</button>
+        <h3>📖 操作說明</h3>
+        <p>1. 認證：密碼 888，當天登入有效。</p>
+        <p>2. 品項：選單已更新所有品項（含高麗菜捲規格28）。</p>
+        <p>3. Excel：匯出採合併格設計，與圖檔一致。</p>
+        <button class="help-close" onclick="toggleHelp()">關閉</button>
     </div>
 </div>
 
-<!-- 登入介面 -->
 <div id="login-overlay">
     <div class="login-box">
         <h2>外倉預計運回系統</h2>
-        <input type="password" id="pw-input" placeholder="通行密碼" onkeyup="if(event.keyCode==13) checkPassword()">
+        <input type="password" id="pw-input" placeholder="密碼 888" onkeyup="if(event.keyCode==13) checkPassword()">
         <button onclick="checkPassword()">登入系統</button>
     </div>
 </div>
@@ -114,7 +92,7 @@
                 <input type="text" id="in-plate" value="KLF-0535" oninput="saveData()">
             </div>
             <div class="input-group">
-                <label>最終趟數 (手改)</label>
+                <label>趟數 (可手改)</label>
                 <input type="number" id="manual-runs" class="highlight-input" value="1" oninput="manualUpdateRuns()">
             </div>
         </div>
@@ -123,22 +101,22 @@
     <div class="card">
         <span class="card-title">2. 商品登打</span>
         <div class="input-group" style="margin-bottom:15px">
-            <label>快速選擇商品</label>
+            <label>快速選擇商品 (最新名單)</label>
             <select id="p-preset" onchange="applyPreset()">
-                <option value="">-- 快速品項選擇 --</option>
+                <option value="">-- 請選擇品項 --</option>
+                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (規格 28)</option>
                 <option value="|黑糖珍珠|40">★ 黑糖珍珠 (規格 40)</option>
                 <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (規格 40)</option>
                 <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (規格 90)</option>
                 <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (規格 90)</option>
                 <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g (補規格)</option>
                 <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補規格)</option>
-                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (規格 28)</option>
                 <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
                 <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
             </select>
         </div>
         <div class="input-row">
-            <div class="input-group" style="flex: 0 0 80px;"><label>代碼</label><input type="text" id="p-code"></div>
+            <div class="input-group" style="flex:0 0 80px;"><label>代碼</label><input type="text" id="p-code"></div>
             <div class="input-group"><label>品名</label><input type="text" id="p-name"></div>
         </div>
         <div class="input-row" style="margin-top:10px">
@@ -146,13 +124,8 @@
             <div class="input-group"><label>箱數</label><input type="number" id="p-qty" value="0"></div>
             <div class="input-group"><label>板數</label><input type="number" id="p-plt" value="0"></div>
         </div>
-        <div class="input-group" style="margin-top:10px">
-            <label>備註 / 效期</label>
-            <textarea id="p-exp" rows="2" placeholder="例：拉回效期 2027/12/06"></textarea>
-        </div>
-        <div class="actions" style="margin-top:15px">
-            <button class="btn-add" onclick="addItem()">+ 加入目前報表</button>
-        </div>
+        <div class="input-group" style="margin-top:10px"><textarea id="p-exp" rows="2" placeholder="備註/效期"></textarea></div>
+        <div class="actions" style="margin-top:15px"><button class="btn-add" onclick="addItem()">+ 加入報表</button></div>
     </div>
 
     <div class="card" id="manage-section" style="display:none">
@@ -169,9 +142,7 @@
     <div class="preview-container">
         <div id="capture-area">
             <table class="main-table">
-                <thead>
-                    <tr><th>取貨日</th><th>商品代號</th><th>隆興載回貨品名稱</th><th>板箱數</th><th>數量</th><th>板數</th><th>備註 / 效期</th></tr>
-                </thead>
+                <thead><tr><th>取貨日</th><th>商品代號</th><th>隆興載回貨品名稱</th><th>板箱數</th><th>數量</th><th>板數</th><th>備註 / 效期</th></tr></thead>
                 <tbody id="table-body"></tbody>
             </table>
             <div class="footer-info">
@@ -192,99 +163,56 @@
     let items = [];
     let isManualRuns = false;
 
-    // --- 初始化驗證 ---
     function initAuth() {
-        // 使用固定的 YYYY-MM-DD 格式避免裝置差異
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-        const lastAuth = localStorage.getItem('auth_date_v8');
-        
-        if (lastAuth === todayStr) {
-            showMain();
-        } else {
-            document.getElementById('login-overlay').style.display = 'flex';
-        }
+        if (localStorage.getItem('auth_date_v10') === todayStr) showMain();
+        else document.getElementById('login-overlay').style.display = 'flex';
     }
 
     function checkPassword() {
         if(document.getElementById('pw-input').value === '888') {
             const now = new Date();
-            const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-            localStorage.setItem('auth_date_v8', todayStr);
+            localStorage.setItem('auth_date_v10', `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`);
             showMain();
-        } else {
-            alert('密碼驗證失敗！');
-            document.getElementById('pw-input').value = '';
-        }
+        } else { alert('密碼錯誤！'); document.getElementById('pw-input').value = ''; }
     }
 
-    function showMain() {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-        loadData();
-    }
+    function showMain() { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; loadData(); }
 
-    // --- 日期計算 ---
     function getNextWorkDay() {
         let date = new Date();
         const holidays = ["2026/01/01", "2026/02/28", "2026/04/04", "2026/04/05", "2026/05/01", "2026/10/10"]; 
-        do {
-            date.setDate(date.getDate() + 1);
-        } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
-        
-        return { 
-            dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`,
-            dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()]
-        };
+        do { date.setDate(date.getDate() + 1); } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
+        return { dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`, dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()] };
     }
 
     function handleDateChange() {
-        const dStr = document.getElementById('in-date').value;
-        const dObj = new Date(dStr);
-        if(!isNaN(dObj.getTime())) {
-            document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
-        }
+        const dObj = new Date(document.getElementById('in-date').value);
+        if(!isNaN(dObj.getTime())) document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
         saveData();
     }
 
-    // --- 核心操作 ---
     function applyPreset() {
-        const select = document.getElementById('p-preset');
-        if (!select.value) return;
-        const parts = select.value.split('|');
-        document.getElementById('p-code').value = parts[0] || "";
-        document.getElementById('p-name').value = parts[1] || "";
-        document.getElementById('p-per').value = parts[2] || 0;
+        const [code, name, per] = document.getElementById('p-preset').value.split('|');
+        document.getElementById('p-code').value = code || "";
+        document.getElementById('p-name').value = name || "";
+        document.getElementById('p-per').value = per || 0;
         document.getElementById('p-qty').focus();
     }
 
     function addItem() {
-        const item = {
-            id: Date.now(),
-            code: document.getElementById('p-code').value,
-            name: document.getElementById('p-name').value,
-            per: document.getElementById('p-per').value,
-            qty: parseInt(document.getElementById('p-qty').value) || 0,
-            plt: parseInt(document.getElementById('p-plt').value) || 0,
-            exp: document.getElementById('p-exp').value
-        };
+        const item = { id: Date.now(), code: document.getElementById('p-code').value, name: document.getElementById('p-name').value, per: document.getElementById('p-per').value, qty: parseInt(document.getElementById('p-qty').value) || 0, plt: parseInt(document.getElementById('p-plt').value) || 0, exp: document.getElementById('p-exp').value };
         if(!item.name) return alert("請輸入商品品名");
         items.push(item);
-        
-        if(!isManualRuns) {
-            document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
-        }
+        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
         saveData();
-        document.getElementById('p-qty').value = 0;
-        document.getElementById('p-plt').value = 0;
-        document.getElementById('p-exp').value = "";
+        document.getElementById('p-qty').value = 0; document.getElementById('p-plt').value = 0; document.getElementById('p-exp').value = "";
     }
 
     function deleteItem(id) {
         items = items.filter(i => i.id !== id);
-        if(!isManualRuns) {
-            document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
-        }
+        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
         saveData();
     }
 
@@ -293,37 +221,16 @@
         const manageBox = document.getElementById('manage-items-container');
         tbody.innerHTML = ''; manageBox.innerHTML = '';
         let tQty = 0, tPlt = 0;
-        
         document.getElementById('manage-section').style.display = items.length > 0 ? 'block' : 'none';
-
         const dVal = document.getElementById('in-date').value;
         const wVal = document.getElementById('in-day').value;
-
         for(let i=0; i<8; i++) {
-            const item = items[i] || {};
+            const it = items[i] || {};
             const row = document.createElement('tr');
-            let dateCol = (i === 0) ? dVal : (i === 1 ? wVal : '');
-            let dateClass = (i === 1) ? 'bg-yellow' : '';
-
-            row.innerHTML = `
-                <td class="${dateClass}">${dateCol}</td>
-                <td>${item.code || ''}</td>
-                <td class="product-name">${item.name || ''}</td>
-                <td>${item.per || ''}</td>
-                <td>${item.qty ? item.qty + '箱' : ''}</td>
-                <td>${item.plt ? item.plt + '板' : ''}</td>
-                <td class="expiry-cell">${item.exp || ''}</td>
-            `;
+            let dc = (i === 0) ? dVal : (i === 1 ? wVal : '');
+            row.innerHTML = `<td class="${i===1?'bg-yellow':''}">${dc}</td><td>${it.code||''}</td><td class="product-name">${it.name||''}</td><td>${it.per||''}</td><td>${it.qty?it.qty+'箱':''}</td><td>${it.plt?it.plt+'板':''}</td><td>${it.exp||''}</td>`;
             tbody.appendChild(row);
-
-            if(item.id) {
-                tQty += item.qty; tPlt += item.plt;
-                manageBox.innerHTML += `
-                    <div class="manage-item">
-                        <div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div>
-                        <button class="btn-del" onclick="deleteItem(${item.id})">刪除</button>
-                    </div>`;
-            }
+            if(it.id) { tQty += it.qty; tPlt += it.plt; manageBox.innerHTML += `<div class="manage-item"><div><b>${it.name}</b><br><small>${it.qty}箱|${it.plt}板</small></div><button class="btn-del" onclick="deleteItem(${it.id})">刪除</button></div>`; }
         }
         document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
         document.getElementById('display-total').innerText = tQty + '箱';
@@ -332,26 +239,16 @@
     }
 
     function manualUpdateRuns() { isManualRuns = true; renderAll(); saveData(); }
-    function saveData() {
-        localStorage.setItem('warehouse_data_v8', JSON.stringify({
-            date: document.getElementById('in-date').value,
-            day: document.getElementById('in-day').value,
-            plate: document.getElementById('in-plate').value,
-            runs: document.getElementById('manual-runs').value,
-            items: items,
-            isManual: isManualRuns
-        }));
-        renderAll();
-    }
-
+    function toggleHelp() { const m = document.getElementById('help-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+    function saveData() { localStorage.setItem('warehouse_data_v10', JSON.stringify({ date: document.getElementById('in-date').value, day: document.getElementById('in-day').value, plate: document.getElementById('in-plate').value, runs: document.getElementById('manual-runs').value, items: items, isManual: isManualRuns })); renderAll(); }
     function loadData() {
-        const saved = localStorage.getItem('warehouse_data_v8');
+        const saved = localStorage.getItem('warehouse_data_v10');
         if(saved) {
             const data = JSON.parse(saved);
-            document.getElementById('in-date').value = data.date || "";
-            document.getElementById('in-day').value = data.day || "";
-            document.getElementById('in-plate').value = data.plate || "KLF-0535";
-            document.getElementById('manual-runs').value = data.runs || 1;
+            document.getElementById('in-date').value = data.date;
+            document.getElementById('in-day').value = data.day;
+            document.getElementById('in-plate').value = data.plate;
+            document.getElementById('manual-runs').value = data.runs;
             items = data.items || [];
             isManualRuns = data.isManual || false;
         } else {
@@ -362,57 +259,28 @@
         renderAll();
     }
 
-    function clearAllData() {
-        if(confirm("確定要清空所有資料嗎？")) {
-            localStorage.removeItem('warehouse_data_v8');
-            items = []; isManualRuns = false;
-            loadData();
-        }
-    }
+    function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v10'); items = []; isManualRuns = false; loadData(); } }
+    function downloadImage() { html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { const link = document.createElement('a'); link.download = `運回清單.png`; link.href = canvas.toDataURL(); link.click(); }); }
 
-    function toggleHelp() {
-        const m = document.getElementById('help-modal');
-        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function downloadImage() {
-        html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `運回清單.png`;
-            link.href = canvas.toDataURL(); link.click();
-        });
-    }
-
-    // --- 改良 Excel 匯出：包含單元格合併 ---
     function downloadExcel() {
-        const dVal = document.getElementById('in-date').value;
-        const wVal = document.getElementById('in-day').value;
         const plate = document.getElementById('in-plate').value;
-        const rowData = [["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註 / 效期"]];
-        
+        const rowData = [["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註"]];
         for(let i=0; i<8; i++) {
             const it = items[i] || {};
-            let dCol = (i === 0) ? dVal : (i === 1 ? wVal : "");
-            rowData.push([dCol, it.code || "", it.name || "", it.per || "", it.qty?it.qty+"箱":"", it.plt?it.plt+"板":"", it.exp || ""]);
+            let d = (i === 0) ? document.getElementById('in-date').value : (i === 1 ? document.getElementById('in-day').value : "");
+            rowData.push([d, it.code||"", it.name||"", it.per||"", it.qty?it.qty+"箱":"", it.plt?it.plt+"板":"", it.exp||""]);
         }
-
-        // 底部合併車牌區
         rowData.push([plate, "", "", "", "", "車趟", document.getElementById('display-pallets').innerText]);
         rowData.push(["", "", "", "", "", "趟數", document.getElementById('display-runs').innerText]);
         rowData.push(["", "", "", "", "", "合計", document.getElementById('display-total').innerText]);
-
         const ws = XLSX.utils.aoa_to_sheet(rowData);
-        ws['!merges'] = [{ s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }]; // 合併 A10:E12
+        ws['!merges'] = [{ s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }];
         ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }];
-        
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "清單");
         XLSX.writeFile(wb, `運回報表_${plate}.xlsx`);
     }
-
-    // 啟動檢測
     window.onload = initAuth;
 </script>
-
 </body>
 </html>
