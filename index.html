@@ -3,259 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>外倉效期管理系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>外倉商品預計運回商品表單</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
-        [v-cloak] { display: none; }
-        input[type="date"], input[type="number"] { font-size: 16px !important; }
-        body { padding-bottom: 110px; }
-        .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
-        .list-enter-from, .list-leave-to { opacity: 0; transform: translateY(10px); }
+        :root { --border-color: #333; --primary-color: #3498db; --secondary-color: #2ecc71; --accent-color: #e67e22; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f3f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
+        
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; display: none; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 3000; color: white;
+        }
+        .login-box { background: white; padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-box h2 { color: #333; margin: 0; text-align: center; font-size: 1.3rem; }
+        .login-box input { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; outline: none; }
+        .login-box button { padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
+
+        .app-container { max-width: 1000px; margin: 0 auto; padding-bottom: 50px; display: none; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        header h2 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
+        .btn-help { background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;}
+
+        #help-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
+        .help-content { background: white; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; border-radius: 15px; padding: 25px; position: relative; }
+        .help-content h3 { margin-top: 0; color: var(--accent-color); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .help-close { background: #34495e; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 15px; }
+        .card-title { font-weight: bold; margin-bottom: 12px; display: block; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #444; }
+
+        .input-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .input-group { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.8rem; color: #888; font-weight: bold;}
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #fdfdfd; -webkit-appearance: none;}
+        .highlight-input { background-color: #fff9db !important; border: 1px solid #fab005; font-weight: bold; color: #d9480f; }
+
+        .manage-item { display: flex; justify-content: space-between; align-items: center; background: #fcfcfc; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; }
+        .btn-del { background: #ff4d4f; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button.btn-add { background: var(--secondary-color); color: white; grid-column: span 2; font-size: 1.1rem; padding: 16px; font-weight: bold; border:none; border-radius: 10px; }
+        .btn-img { background: #e74c3c; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold;}
+        .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold;}
+        .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; font-size: 0.9rem; border:none; border-radius: 10px;}
+
+        .preview-container { overflow-x: auto; background: #ddd; padding: 10px; border-radius: 12px; margin-top: 20px; }
+        #capture-area { width: 1000px; background: white; padding: 40px; margin: 0 auto; }
+        .main-table { width: 100%; border-collapse: collapse; border: 2px solid var(--border-color); font-size: 18px; }
+        .main-table th, .main-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 42px; }
+        .main-table th { background-color: #f2f2f2; font-weight: bold; }
+        .product-name { text-align: left; padding-left: 15px !important; width: 280px; }
+        .expiry-cell { font-size: 13px; text-align: left; vertical-align: top; white-space: pre-line; width: 210px; line-height: 1.3;}
+        .footer-info { display: flex; border: 2px solid var(--border-color); border-top: none; }
+        .footer-left { flex: 3; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center;}
+        .footer-right { flex: 2; }
+        .footer-right table { width: 100%; border-collapse: collapse; }
+        .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px;}
+        .bg-yellow { background-color: #ffff00 !important; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body>
 
-    <div id="app" v-cloak>
-        
-        <!-- 1. 登入畫面 -->
-        <div v-if="!isAuthorized" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 px-6">
-            <div class="w-full max-w-sm bg-white p-8 rounded-3xl shadow-2xl">
-                <h2 class="text-xl font-bold text-slate-800 text-center mb-6 tracking-widest">系統安全驗證</h2>
-                <input type="password" v-model="passwordInput" @keyup.enter="verifyPassword" 
-                       placeholder="請輸入管理代碼"
-                       class="w-full border-2 border-slate-100 rounded-2xl px-4 py-4 outline-none focus:border-indigo-500 text-center text-xl mb-4 transition-all tracking-widest">
-                <button @click="verifyPassword" class="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl active:scale-95 transition-all">登入系統</button>
-                <p v-if="loginError" class="text-red-500 text-center text-xs mt-4 font-bold">驗證碼錯誤</p>
+<div id="help-modal">
+    <div class="help-content">
+        <h3>📖 操作說明手冊</h3>
+        <p><b>1. 認證：</b>輸入密碼 <b>888</b>，當天登入後隔日才需重登。</p>
+        <p><b>2. 日期：</b>自動預設次一工作天。手改日期後星期會同步。</p>
+        <p><b>3. 選項：</b>選單可快速填入商品。無代碼品項請於選取後手動補填。</p>
+        <p><b>4. 趟數：</b>8板一車，黃色欄位可手動覆蓋。</p>
+        <button class="help-close" onclick="toggleHelp()">關閉</button>
+    </div>
+</div>
+
+<div id="login-overlay">
+    <div class="login-box">
+        <h2>外倉預計運回系統</h2>
+        <input type="password" id="pw-input" placeholder="通行密碼" onkeyup="if(event.keyCode==13) checkPassword()">
+        <button onclick="checkPassword()">登入系統</button>
+    </div>
+</div>
+
+<div id="app-content" class="app-container">
+    <header>
+        <h2>預計運回商品表單</h2>
+        <button class="btn-help" onclick="toggleHelp()">📖 說明</button>
+    </header>
+
+    <div class="card">
+        <span class="card-title">1. 基本資料</span>
+        <div class="input-row">
+            <div class="input-group">
+                <label>取貨日期</label>
+                <input type="text" id="in-date" placeholder="YYYY/MM/DD" oninput="handleDateChange()">
             </div>
-        </div>
-
-        <!-- 2. 主程式畫面 -->
-        <div v-else class="max-w-md mx-auto">
-            
-            <!-- 頂部標題列 -->
-            <div class="sticky top-0 z-30 bg-slate-900 text-white px-4 py-3 shadow-lg flex justify-between items-center border-b border-indigo-500/30">
-                <div class="flex flex-col">
-                    <h1 class="text-base font-bold tracking-tight">外倉效期管理</h1>
-                    <span class="text-[9px] text-slate-400 font-mono tracking-wider italic font-bold">品號核對系統</span>
-                </div>
-                <div class="flex items-center gap-2 text-[10px]">
-                    <button @click="showHelp = !showHelp" class="bg-slate-800 border border-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">💡 說明</button>
-                    <button @click="clearAllRecords" class="bg-red-900/40 border border-red-800 text-red-200 px-2 py-1.5 rounded-lg flex items-center gap-1 shadow-sm">🗑️ 清空</button>
-                </div>
+            <div class="input-group">
+                <label>星期</label>
+                <input type="text" id="in-day" readonly style="background:#f0f0f0;">
             </div>
-
-            <!-- 操作手冊 -->
-            <div v-if="showHelp" class="bg-indigo-50 p-4 text-[11px] text-indigo-900 border-b border-indigo-100 leading-relaxed shadow-inner">
-                <p class="font-bold mb-1 italic underline">📖 操作手冊：</p>
-                1. 點擊品號按鈕新增紀錄（支援同品號多效期）。<br>
-                2. 填寫箱數與效期（<span class="text-red-600 font-bold">禁止填寫今日以前日期</span>）。<br>
-                3. 背景警示：<span class="text-red-500 font-bold">紅(30天內)</span>、<span class="text-amber-600 font-bold">黃(90天內)</span>。<br>
-                4. 點擊底部按鈕一鍵複製 LINE 彙整訊息。
+            <div class="input-group">
+                <label>車牌</label>
+                <input type="text" id="in-plate" value="KLF-0535" oninput="saveData()">
             </div>
-
-            <div class="p-4 space-y-4">
-                <!-- 商品快速選擇按鈕 -->
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest text-center">點擊品號按鈕開始回報</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button v-for="p in productMaster" :key="p.id" @click="addRecord(p)" 
-                                class="bg-white border border-slate-200 active:bg-indigo-600 active:text-white text-left p-3 rounded-xl shadow-sm transition-all flex flex-col hover:border-indigo-300">
-                            <span class="text-[9px] font-mono text-indigo-500 leading-none mb-1 tracking-tighter font-bold uppercase">品號: {{ p.id }}</span>
-                            <span class="text-[11px] font-bold text-slate-700 leading-tight">{{ p.name }}</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 自定義品項 -->
-                <div class="flex gap-2">
-                    <input type="text" v-model="customProductName" placeholder="新增其他品項名稱..." class="flex-1 bg-slate-200 border-0 rounded-xl px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-300">
-                    <button @click="addCustomProduct" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md">新增</button>
-                </div>
-
-                <hr class="border-slate-200">
-
-                <!-- 回報清單 -->
-                <div class="space-y-3">
-                    <transition-group name="list">
-                        <div v-for="(item, index) in records" :key="item.key" 
-                             class="p-4 rounded-2xl border-2 transition-all relative shadow-sm"
-                             :class="getWarningStyle(item.expiry)">
-                            
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] font-mono text-slate-400 font-bold">品號: {{ item.id }}</span>
-                                    <span class="font-black text-slate-800 text-sm leading-tight italic">{{ item.name }}</span>
-                                </div>
-                                <button @click="removeRecord(index)" class="text-red-400 text-[10px] font-bold border border-red-100 px-2 py-0.5 rounded-md shadow-sm bg-white/50">移除</button>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-white/40 rounded-lg p-2 text-center">
-                                    <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">數量 (箱)</label>
-                                    <input type="number" inputmode="numeric" v-model.number="item.qty" placeholder="0" class="w-full bg-transparent border-b border-slate-300 py-1 outline-none text-xl font-mono text-center focus:border-indigo-400">
-                                </div>
-                                <div class="bg-white/40 rounded-lg p-2 text-center">
-                                    <label class="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-tighter">到期日期</label>
-                                    <input type="date" v-model="item.expiry" @change="validateDate(item)" class="w-full bg-transparent border-b border-slate-300 py-1 outline-none text-sm text-center focus:border-indigo-400">
-                                </div>
-                            </div>
-                        </div>
-                    </transition-group>
-                </div>
-
-                <div v-if="records.length === 0" class="text-center py-12 text-slate-300 italic text-sm border-2 border-dashed border-slate-200 rounded-3xl">
-                    尚未選取商品品號...
-                </div>
-
-                <!-- 預覽區 -->
-                <div class="bg-slate-900 rounded-2xl p-5 mt-4 border border-slate-800 shadow-2xl">
-                    <p class="text-[9px] text-slate-500 font-bold uppercase mb-3 text-center tracking-widest italic">LINE 回報格式預覽</p>
-                    <div class="text-slate-400 text-[10px] font-mono whitespace-pre-wrap leading-tight">
-                        {{ summaryContent || '等待資料輸入中...' }}
-                    </div>
-                </div>
+            <div class="input-group">
+                <label>最終趟數</label>
+                <input type="number" id="manual-runs" class="highlight-input" value="1" oninput="manualUpdateRuns()">
             </div>
-
-            <!-- 底部固定操作列 -->
-            <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 flex gap-2 z-40">
-                <button @click="exportToExcel" class="bg-emerald-100 text-emerald-700 w-16 h-14 rounded-2xl flex items-center justify-center text-xl shadow-inner border border-emerald-200">📊</button>
-                <button @click="copyToClipboard" :disabled="records.length === 0" 
-                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:bg-slate-300 text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all">
-                    一鍵複製彙整訊息
-                </button>
-            </div>
-
-            <!-- 複製提示 -->
-            <transition name="fade">
-                <div v-if="copyStatus" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/80 text-white px-8 py-4 rounded-3xl font-bold shadow-2xl text-center">
-                    已成功複製彙整訊息
-                </div>
-            </transition>
         </div>
     </div>
 
-    <script>
-        const { createApp } = Vue
-        createApp({
-            data() {
-                return {
-                    isAuthorized: false,
-                    showHelp: false,
-                    passwordInput: '',
-                    loginError: false,
-                    copyStatus: false,
-                    customProductName: '',
-                    // 17 項商品 (移除統一字樣)
-                    productMaster: [
-                        { id: '033471', name: '冰戀雙旋冰淇淋-巧克力香草' },
-                        { id: '303905', name: '原味本舖-紅豆牛奶冰棒' },
-                        { id: '305176', name: '冰戀雪捲冰淇淋-牛奶風味' },
-                        { id: '343319', name: 'Ice Walker冰塊' },
-                        { id: '350323', name: '刨走族芒果風味冰沙' },
-                        { id: '380972', name: '瑞穗鮮乳巧酥雪糕' },
-                        { id: '567084', name: '布丁牛奶雪糕' },
-                        { id: '611852', name: '原味本舖-桂圓糯米冰棒' },
-                        { id: '647930', name: '麥香奶茶雪糕' },
-                        { id: '678061', name: '原味本舖-花生牛奶冰棒' },
-                        { id: '678368', name: '瑞穗鮮乳雪糕' },
-                        { id: '681796', name: '冰淇淋-香草風味' },
-                        { id: '718654', name: '布丁牛奶雪糕(翻轉雪糕)' },
-                        { id: '757304', name: '香草杯裝80g' },
-                        { id: '765471', name: '原味本舖-冬瓜檸檬冰棒' },
-                        { id: '855411', name: '刨走族烏梅風味冰沙' },
-                        { id: '977064', name: '瑞穗鮮乳紅豆雪糕' }
-                    ],
-                    records: JSON.parse(localStorage.getItem('savedRecords_Warehouse_Final')) || []
-                }
-            },
-            mounted() { this.checkAuth(); },
-            watch: {
-                records: { handler() { this.saveData(); }, deep: true }
-            },
-            computed: {
-                summaryContent() {
-                    const validRecords = this.records.filter(r => r.expiry);
-                    if (validRecords.length === 0) return "";
-                    const grouped = {};
-                    validRecords.forEach(r => {
-                        const key = `${r.id}_${r.name}`;
-                        if (!grouped[key]) grouped[key] = { id: r.id, name: r.name, total: 0, details: [] };
-                        const qty = r.qty || 0;
-                        grouped[key].total += qty;
-                        grouped[key].details.push({ qty, expiry: r.expiry });
-                    });
-                    const now = new Date();
-                    let text = `📦 【外倉效期管理回報】\n日期：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}\n━━━━━━━━━━━━━━━\n`;
-                    for (const key in grouped) {
-                        const item = grouped[key];
-                        text += `■ [${item.id}] ${item.name}\n`;
-                        text += `　 品項總數：${item.total} 箱\n`;
-                        item.details.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-                        item.details.forEach(d => { text += `　- ${d.qty} 箱 (效期: ${d.expiry})\n`; });
-                        text += `\n`;
-                    }
-                    text += `━━━━━━━━━━━━━━━\n⚠️ 以上資料供幹部管理外倉需求`;
-                    return text.trim();
-                }
-            },
-            methods: {
-                checkAuth() {
-                    if (localStorage.getItem('authDate_Warehouse_Final') === new Date().toLocaleDateString()) this.isAuthorized = true;
-                },
-                verifyPassword() {
-                    if (this.passwordInput === '888') {
-                        localStorage.setItem('authDate_Warehouse_Final', new Date().toLocaleDateString());
-                        this.isAuthorized = true;
-                    } else {
-                        this.loginError = true;
-                        this.passwordInput = '';
-                    }
-                },
-                validateDate(item) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    if (item.expiry && new Date(item.expiry) < today) {
-                        alert("⚠️ 錯誤：禁止輸入過期日期！");
-                        item.expiry = '';
-                    }
-                },
-                exportToExcel() {
-                    let csv = "\uFEFF品號,品名,數量,效期\n";
-                    this.records.forEach(r => { csv += `${r.id},${r.name},${r.qty || 0},${r.expiry || '未填'}\n`; });
-                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `外倉報表_${new Date().toLocaleDateString()}.csv`;
-                    link.click();
-                },
-                getWarningStyle(expiry) {
-                    if (!expiry) return 'bg-white border-slate-100';
-                    const diff = (new Date(expiry) - new Date()) / (1000 * 60 * 60 * 24);
-                    if (diff <= 30) return 'bg-red-50 border-red-200';
-                    if (diff <= 90) return 'bg-amber-50 border-amber-200';
-                    return 'bg-green-50 border-green-200';
-                },
-                addRecord(product) {
-                    this.records.push({ key: Date.now() + Math.random(), id: product.id, name: product.name, qty: null, expiry: '' });
-                },
-                addCustomProduct() {
-                    if (this.customProductName.trim()) {
-                        this.records.push({ key: Date.now() + Math.random(), id: '手動', name: this.customProductName.trim(), qty: null, expiry: '' });
-                        this.customProductName = '';
-                    }
-                },
-                removeRecord(index) { this.records.splice(index, 1); },
-                saveData() { localStorage.setItem('savedRecords_Warehouse_Final', JSON.stringify(this.records)); },
-                clearAllRecords() { if (confirm("確定要清空目前所有填寫的資料嗎？")) this.records = []; },
-                async copyToClipboard() {
-                    if (!this.summaryContent) return;
-                    await navigator.clipboard.writeText(this.summaryContent);
-                    this.copyStatus = true;
-                    setTimeout(() => this.copyStatus = false, 1500);
-                }
+    <div class="card">
+        <span class="card-title">2. 商品登打</span>
+        <div class="input-group" style="margin-bottom:15px">
+            <label>快速選擇商品 (代號空白品項選取後請補填)</label>
+            <select id="p-preset" onchange="applyPreset()">
+                <option value="">-- 手動輸入或選擇品項 --</option>
+                <!-- 新增品項區 (代號空白) -->
+                <option value="|黑糖珍珠|40">★ 黑糖珍珠 (代號補填)</option>
+                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (代號補填)</option>
+                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (代號補填)</option>
+                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (代號補填)</option>
+                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-香草風味110g (補代號/規格)</option>
+                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補代號/規格)</option>
+                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (補代號)</option>
+
+                <!-- 歷史不重複品項 -->
+                <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
+                <option value="0006|冰戀雪捲牛奶|54">0006 - 冰戀雪捲牛奶 (54)</option>
+                <option value="0011|統一香草杯裝110g|135">0011 - 統一香草杯裝110g (135)</option>
+                <option value="0011|統一香草杯裝110g|29">0011 - 統一香草杯裝110g (29)</option>
+                <option value="160060|甜玉米|30">160060 - 甜玉米 (30)</option>
+                <option value="160066|黃金魚板|28">160066 - 黃金魚板 (28)</option>
+                <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
+            </select>
+        </div>
+        <div class="input-row">
+            <div class="input-group" style="flex: 0 0 80px;"><label>代碼</label><input type="text" id="p-code"></div>
+            <div class="input-group"><label>品名</label><input type="text" id="p-name"></div>
+        </div>
+        <div class="input-row" style="margin-top:10px">
+            <div class="input-group"><label>板箱數</label><input type="number" id="p-per" value="0"></div>
+            <div class="input-group"><label>箱數</label><input type="number" id="p-qty" value="0"></div>
+            <div class="input-group"><label>板數</label><input type="number" id="p-plt" value="0"></div>
+        </div>
+        <div class="input-group" style="margin-top:10px">
+            <textarea id="p-exp" rows="2" placeholder="備註/效期 (例如:拉回效期 2027/12/06)"></textarea>
+        </div>
+        <div class="actions" style="margin-top:15px">
+            <button class="btn-add" onclick="addItem()">+ 加入目前清單</button>
+        </div>
+    </div>
+
+    <div class="card" id="manage-section" style="display:none">
+        <span class="card-title">3. 項目管理 (點擊刪除)</span>
+        <div id="manage-items-container"></div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-img" onclick="downloadImage()">📸 截圖回報</button>
+        <button class="btn-xlsx" onclick="downloadExcel()">📊 Excel 匯出</button>
+        <button class="btn-reset" onclick="clearAllData()">⚠️ 清空</button>
+    </div>
+
+    <div class="preview-container">
+        <div id="capture-area">
+            <table class="main-table">
+                <thead>
+                    <tr><th>取貨日</th><th>商品代號</th><th>隆興載回貨品名稱</th><th>板箱數</th><th>數量</th><th>板數</th><th>備註 / 效期</th></tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            <div class="footer-info">
+                <div class="footer-left"><div id="display-plate" style="font-size: 28px; font-weight: bold;">-</div></div>
+                <div class="footer-right">
+                    <table>
+                        <tr><td style="width: 60px;">車趟</td><td id="display-pallets">0板</td></tr>
+                        <tr><td>趟數</td><td id="display-runs" style="font-weight: bold; color: #d35400;">1趟</td></tr>
+                        <tr><td>合計</td><td id="display-total" style="font-weight: bold;">0箱</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let items = [];
+    let isManualRuns = false;
+
+    function initAuth() {
+        const today = new Date().toLocaleDateString();
+        const lastAuth = localStorage.getItem('auth_date_v7');
+        if (lastAuth === today) showMain();
+        else document.getElementById('login-overlay').style.display = 'flex';
+    }
+
+    function checkPassword() {
+        if(document.getElementById('pw-input').value === '888') {
+            localStorage.setItem('auth_date_v7', new Date().toLocaleDateString());
+            showMain();
+        } else { alert('密碼錯誤！'); document.getElementById('pw-input').value = ''; }
+    }
+
+    function showMain() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        loadData();
+    }
+
+    function getNextWorkDay() {
+        let date = new Date();
+        const holidays = ["2026/01/01", "2026/02/28", "2026/04/04", "2026/04/05", "2026/05/01", "2026/10/10"]; 
+        do { date.setDate(date.getDate() + 1); } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
+        return { dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`, dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()] };
+    }
+
+    function handleDateChange() {
+        const dObj = new Date(document.getElementById('in-date').value);
+        if(!isNaN(dObj.getTime())) document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
+        saveData();
+    }
+
+    function applyPreset() {
+        const [code, name, per] = document.getElementById('p-preset').value.split('|');
+        document.getElementById('p-code').value = code || "";
+        document.getElementById('p-name').value = name || "";
+        document.getElementById('p-per').value = per || 0;
+        document.getElementById('p-qty').focus();
+    }
+
+    function addItem() {
+        const item = {
+            id: Date.now(),
+            code: document.getElementById('p-code').value,
+            name: document.getElementById('p-name').value,
+            per: document.getElementById('p-per').value,
+            qty: parseInt(document.getElementById('p-qty').value) || 0,
+            plt: parseInt(document.getElementById('p-plt').value) || 0,
+            exp: document.getElementById('p-exp').value
+        };
+        if(!item.name) return alert("請輸入商品名稱");
+        items.push(item);
+        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        saveData();
+        document.getElementById('p-qty').value = 0; document.getElementById('p-plt').value = 0; document.getElementById('p-exp').value = "";
+    }
+
+    function deleteItem(id) {
+        items = items.filter(i => i.id !== id);
+        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        saveData();
+    }
+
+    function renderAll() {
+        const tbody = document.getElementById('table-body');
+        const manageBox = document.getElementById('manage-items-container');
+        tbody.innerHTML = ''; manageBox.innerHTML = '';
+        let tQty = 0, tPlt = 0;
+        document.getElementById('manage-section').style.display = items.length > 0 ? 'block' : 'none';
+
+        for(let i=0; i<8; i++) {
+            const item = items[i] || {};
+            const row = document.createElement('tr');
+            let dateCol = (i === 0) ? document.getElementById('in-date').value : (i === 1 ? document.getElementById('in-day').value : '');
+            let dateClass = (i === 1) ? 'bg-yellow' : '';
+            row.innerHTML = `<td class="${dateClass}">${dateCol}</td><td>${item.code || ''}</td><td class="product-name">${item.name || ''}</td><td>${item.per || ''}</td><td>${item.qty ? item.qty + '箱' : ''}</td><td>${item.plt ? item.plt + '板' : ''}</td><td class="expiry-cell">${item.exp || ''}</td>`;
+            tbody.appendChild(row);
+            if(item.id) {
+                tQty += item.qty; tPlt += item.plt;
+                manageBox.innerHTML += `<div class="manage-item"><div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div><button class="btn-del" onclick="deleteItem(${item.id})">刪除</button></div>`;
             }
-        }).mount('#app')
-    </script>
+        }
+        document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
+        document.getElementById('display-total').innerText = tQty + '箱';
+        document.getElementById('display-pallets').innerText = tPlt + '板';
+        document.getElementById('display-runs').innerText = document.getElementById('manual-runs').value + '趟';
+    }
+
+    function manualUpdateRuns() { isManualRuns = true; renderAll(); saveData(); }
+    function toggleHelp() { const m = document.getElementById('help-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+    function saveData() { localStorage.setItem('warehouse_data_v7', JSON.stringify({ date: document.getElementById('in-date').value, day: document.getElementById('in-day').value, plate: document.getElementById('in-plate').value, runs: document.getElementById('manual-runs').value, items: items, isManual: isManualRuns })); renderAll(); }
+    function loadData() {
+        const saved = localStorage.getItem('warehouse_data_v7');
+        if(saved) {
+            const data = JSON.parse(saved);
+            document.getElementById('in-date').value = data.date;
+            document.getElementById('in-day').value = data.day;
+            document.getElementById('in-plate').value = data.plate;
+            document.getElementById('manual-runs').value = data.runs;
+            items = data.items || [];
+            isManualRuns = data.isManual || false;
+        } else {
+            const nextDay = getNextWorkDay();
+            document.getElementById('in-date').value = nextDay.dateStr;
+            document.getElementById('in-day').value = nextDay.dayName;
+        }
+        renderAll();
+    }
+
+    function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v7'); items = []; isManualRuns = false; loadData(); } }
+    function downloadImage() { html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { const link = document.createElement('a'); link.download = `運回清單.png`; link.href = canvas.toDataURL(); link.click(); }); }
+    function downloadExcel() {
+        const excelData = [["取貨日", "代碼", "品名", "板箱", "箱數", "板數", "備註"]];
+        items.forEach((item, index) => { let d = (index === 0) ? document.getElementById('in-date').value : (index === 1 ? document.getElementById('in-day').value : ""); excelData.push([d, item.code, item.name, item.per, item.qty, item.plt, item.exp]); });
+        const ws = XLSX.utils.aoa_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "清單"); XLSX.writeFile(wb, `報表.xlsx`);
+    }
+    window.onload = initAuth;
+</script>
 </body>
 </html>
