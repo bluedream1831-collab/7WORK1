@@ -3,68 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>外倉商品預計運回商品表單 - 最終更新版</title>
+    <title>外倉商品預計運回表單 v11</title>
+    <!-- 使用最高相容性的套件連結 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
     <style>
         :root { --border-color: #333; --primary-color: #3498db; --secondary-color: #2ecc71; --accent-color: #e67e22; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f9; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f3f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
+        
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-box h2 { color: #333; margin: 0; text-align: center; font-size: 1.3rem; }
-        .login-box input { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; outline: none; }
-        .login-box button { padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
+        .login-box { background: white; padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 85%; max-width: 320px; }
+        .login-box h2 { color: #333; margin: 0; text-align: center; }
+        .login-box input { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; }
+        .login-box button { padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
         .app-container { max-width: 1000px; margin: 0 auto; padding-bottom: 50px; display: none; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        header h2 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
-        .btn-help { background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold; }
-        #help-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
-        .help-content { background: white; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; border-radius: 15px; padding: 25px; }
-        .help-close { background: #34495e; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; }
+        
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 15px; }
-        .card-title { font-weight: bold; margin-bottom: 12px; display: block; border-left: 5px solid var(--primary-color); padding-left: 10px; color: #444; }
+        .card-title { font-weight: bold; margin-bottom: 12px; display: block; border-left: 5px solid var(--primary-color); padding-left: 10px; }
+
         .input-row { display: flex; flex-wrap: wrap; gap: 10px; }
         .input-group { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 0.8rem; color: #888; font-weight: bold; }
-        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #fdfdfd; }
-        .highlight-input { background-color: #fff9db !important; border: 1px solid #fab005; font-weight: bold; color: #d9480f; }
-        .manage-item { display: flex; justify-content: space-between; align-items: center; background: #fcfcfc; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; }
-        .btn-del { background: #ff4d4f; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background: #fff; }
+        .highlight-input { background-color: #fff9db !important; border: 1px solid #fab005; font-weight: bold; }
+
+        .manage-item { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; }
+        .btn-del { background: #ff4d4f; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        button.btn-add { background: var(--secondary-color); color: white; grid-column: span 2; font-size: 1.1rem; padding: 16px; font-weight: bold; border:none; border-radius: 10px; }
-        .btn-img { background: #e74c3c; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; }
-        .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; }
-        .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; font-size: 0.9rem; border:none; border-radius: 10px; }
+        .btn-add { background: var(--secondary-color); color: white; grid-column: span 2; font-size: 1.1rem; padding: 16px; font-weight: bold; border:none; border-radius: 10px; cursor: pointer;}
+        .btn-img { background: #e74c3c; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; cursor: pointer;}
+        .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold; cursor: pointer;}
+        .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; border:none; border-radius: 10px; cursor: pointer;}
+
+        /* 表格預覽 */
         .preview-container { overflow-x: auto; background: #ddd; padding: 10px; border-radius: 12px; margin-top: 20px; }
         #capture-area { width: 1000px; background: white; padding: 40px; margin: 0 auto; }
         .main-table { width: 100%; border-collapse: collapse; border: 2px solid var(--border-color); font-size: 18px; }
         .main-table th, .main-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 42px; }
         .main-table th { background-color: #f2f2f2; font-weight: bold; }
         .product-name { text-align: left; padding-left: 15px !important; width: 280px; }
-        .expiry-cell { font-size: 13px; text-align: left; vertical-align: top; white-space: pre-line; width: 210px; line-height: 1.3; }
+        .bg-yellow { background-color: #ffff00 !important; }
+
+        /* 頁尾結構 */
         .footer-info { display: flex; border: 2px solid var(--border-color); border-top: none; }
-        .footer-left { flex: 5; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .footer-left { flex: 5; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; }
         .footer-right { flex: 2; }
         .footer-right table { width: 100%; border-collapse: collapse; }
-        .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px; }
-        .bg-yellow { background-color: #ffff00 !important; }
+        .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px;}
     </style>
 </head>
 <body>
 
-<div id="help-modal">
-    <div class="help-content">
-        <h3>📖 操作說明</h3>
-        <p>1. 認證：密碼 888，當天登入有效。</p>
-        <p>2. 品項：選單已更新所有品項（含高麗菜捲規格28）。</p>
-        <p>3. Excel：匯出採合併格設計，與圖檔一致。</p>
-        <button class="help-close" onclick="toggleHelp()">關閉</button>
-    </div>
-</div>
-
 <div id="login-overlay">
     <div class="login-box">
-        <h2>外倉預計運回系統</h2>
+        <h2>外倉系統 v11</h2>
         <input type="password" id="pw-input" placeholder="密碼 888" onkeyup="if(event.keyCode==13) checkPassword()">
         <button onclick="checkPassword()">登入系統</button>
     </div>
@@ -72,71 +67,56 @@
 
 <div id="app-content" class="app-container">
     <header>
-        <h2>預計運回商品表單</h2>
-        <button class="btn-help" onclick="toggleHelp()">📖 說明</button>
+        <h2>運回預計表單</h2>
+        <button style="background:#e67e22; color:white; border:none; border-radius:20px; padding:5px 15px;" onclick="alert('1.填寫基本資料\n2.選商品並加至清單\n3.點下載產生報表')">說明</button>
     </header>
 
     <div class="card">
-        <span class="card-title">1. 基本資料</span>
+        <span class="card-title">基本資料</span>
         <div class="input-row">
-            <div class="input-group">
-                <label>取貨日期</label>
-                <input type="text" id="in-date" placeholder="YYYY/MM/DD" oninput="handleDateChange()">
-            </div>
-            <div class="input-group">
-                <label>星期</label>
-                <input type="text" id="in-day" readonly style="background:#f0f0f0;">
-            </div>
-            <div class="input-group">
-                <label>車牌</label>
-                <input type="text" id="in-plate" value="KLF-0535" oninput="saveData()">
-            </div>
-            <div class="input-group">
-                <label>趟數 (可手改)</label>
-                <input type="number" id="manual-runs" class="highlight-input" value="1" oninput="manualUpdateRuns()">
-            </div>
+            <div class="input-group"><label>日期</label><input type="text" id="in-date" oninput="handleDateChange()"></div>
+            <div class="input-group"><label>星期</label><input type="text" id="in-day" readonly style="background:#eee"></div>
+            <div class="input-group"><label>車牌</label><input type="text" id="in-plate" value="KLF-0535" oninput="saveData()"></div>
+            <div class="input-group"><label>趟數</label><input type="number" id="manual-runs" class="highlight-input" value="1" oninput="manualUpdateRuns()"></div>
         </div>
     </div>
 
     <div class="card">
-        <span class="card-title">2. 商品登打</span>
-        <div class="input-group" style="margin-bottom:15px">
-            <label>快速選擇商品 (最新名單)</label>
-            <select id="p-preset" onchange="applyPreset()">
-                <option value="">-- 請選擇品項 --</option>
-                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (規格 28)</option>
-                <option value="|黑糖珍珠|40">★ 黑糖珍珠 (規格 40)</option>
-                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (規格 40)</option>
-                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (規格 90)</option>
-                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (規格 90)</option>
-                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g (補規格)</option>
-                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補規格)</option>
-                <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
-                <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
-            </select>
-        </div>
+        <span class="card-title">品項登打</span>
+        <select id="p-preset" onchange="applyPreset()" style="width:100%; margin-bottom:10px;">
+            <option value="">-- 快速品項選擇 --</option>
+            <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (28)</option>
+            <option value="|黑糖珍珠|40">★ 黑糖珍珠 (40)</option>
+            <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (40)</option>
+            <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (90)</option>
+            <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (90)</option>
+            <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g (補規格)</option>
+            <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補規格)</option>
+            <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
+            <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
+        </select>
         <div class="input-row">
-            <div class="input-group" style="flex:0 0 80px;"><label>代碼</label><input type="text" id="p-code"></div>
-            <div class="input-group"><label>品名</label><input type="text" id="p-name"></div>
+            <input type="text" id="p-code" placeholder="代碼" style="width:70px">
+            <input type="text" id="p-name" placeholder="品名" style="flex:1">
         </div>
         <div class="input-row" style="margin-top:10px">
-            <div class="input-group"><label>板箱數</label><input type="number" id="p-per" value="0"></div>
-            <div class="input-group"><label>箱數</label><input type="number" id="p-qty" value="0"></div>
-            <div class="input-group"><label>板數</label><input type="number" id="p-plt" value="0"></div>
+            <input type="number" id="p-per" placeholder="板規格" style="flex:1">
+            <input type="number" id="p-qty" placeholder="箱數" style="flex:1">
+            <input type="number" id="p-plt" placeholder="板數" style="flex:1">
         </div>
-        <div class="input-group" style="margin-top:10px"><textarea id="p-exp" rows="2" placeholder="備註/效期"></textarea></div>
-        <div class="actions" style="margin-top:15px"><button class="btn-add" onclick="addItem()">+ 加入報表</button></div>
+        <textarea id="p-exp" rows="2" placeholder="備註/效期" style="width:100%; margin-top:10px;"></textarea>
+        <button class="btn-add" onclick="addItem()" style="margin-top:10px;">+ 加入報表</button>
     </div>
 
     <div class="card" id="manage-section" style="display:none">
-        <span class="card-title">3. 項目管理 (點擊刪除)</span>
+        <span class="card-title">項目管理</span>
         <div id="manage-items-container"></div>
     </div>
 
     <div class="actions">
-        <button class="btn-img" onclick="downloadImage()">📸 截圖回報</button>
-        <button class="btn-xlsx" onclick="downloadExcel()">📊 Excel 匯出</button>
-        <button class="btn-reset" onclick="clearAllData()">⚠️ 清空</button>
+        <button class="btn-img" onclick="downloadImage()">📸 產生圖片</button>
+        <button class="btn-xlsx" id="xlsx-btn" onclick="downloadExcel()">📊 匯出 Excel</button>
+        <button class="btn-reset" onclick="clearAllData()">⚠️ 清空資料</button>
     </div>
 
     <div class="preview-container">
@@ -146,12 +126,12 @@
                 <tbody id="table-body"></tbody>
             </table>
             <div class="footer-info">
-                <div class="footer-left"><div id="display-plate" style="font-size: 32px; font-weight: bold; letter-spacing: 2px;">-</div></div>
+                <div class="footer-left" id="display-plate">-</div>
                 <div class="footer-right">
                     <table>
-                        <tr><td style="width: 70px; background: #f9f9f9;">車趟</td><td id="display-pallets">0板</td></tr>
-                        <tr><td style="background: #f9f9f9;">趟數</td><td id="display-runs" style="font-weight: bold; color: #d35400;">1趟</td></tr>
-                        <tr><td style="background: #f9f9f9;">合計</td><td id="display-total" style="font-weight: bold;">0箱</td></tr>
+                        <tr><td style="width: 70px;">車趟</td><td id="display-pallets">0板</td></tr>
+                        <tr><td>趟數</td><td id="display-runs" style="color:red; font-weight:bold;">1趟</td></tr>
+                        <tr><td>合計</td><td id="display-total" style="font-weight:bold;">0箱</td></tr>
                     </table>
                 </div>
             </div>
@@ -163,51 +143,87 @@
     let items = [];
     let isManualRuns = false;
 
-    function initAuth() {
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-        if (localStorage.getItem('auth_date_v10') === todayStr) showMain();
-        else document.getElementById('login-overlay').style.display = 'flex';
-    }
+    // 啟動驗證與資料載入
+    window.onload = function() {
+        const today = new Date().toISOString().split('T')[0];
+        if (localStorage.getItem('auth_date_v11') === today) {
+            showMain();
+        } else {
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+    };
 
     function checkPassword() {
-        if(document.getElementById('pw-input').value === '888') {
-            const now = new Date();
-            localStorage.setItem('auth_date_v10', `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`);
+        if (document.getElementById('pw-input').value === '888') {
+            localStorage.setItem('auth_date_v11', new Date().toISOString().split('T')[0]);
             showMain();
-        } else { alert('密碼錯誤！'); document.getElementById('pw-input').value = ''; }
+        } else { alert('密碼錯誤'); }
     }
 
-    function showMain() { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; loadData(); }
-
-    function getNextWorkDay() {
-        let date = new Date();
-        const holidays = ["2026/01/01", "2026/02/28", "2026/04/04", "2026/04/05", "2026/05/01", "2026/10/10"]; 
-        do { date.setDate(date.getDate() + 1); } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
-        return { dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`, dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()] };
+    function showMain() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        loadData();
     }
 
     function handleDateChange() {
-        const dObj = new Date(document.getElementById('in-date').value);
-        if(!isNaN(dObj.getTime())) document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
+        const d = new Date(document.getElementById('in-date').value);
+        if(!isNaN(d.getTime())) document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][d.getDay()];
         saveData();
     }
 
     function applyPreset() {
-        const [code, name, per] = document.getElementById('p-preset').value.split('|');
-        document.getElementById('p-code').value = code || "";
-        document.getElementById('p-name').value = name || "";
-        document.getElementById('p-per').value = per || 0;
+        const val = document.getElementById('p-preset').value;
+        if (!val) return;
+        const p = val.split('|');
+        document.getElementById('p-code').value = p[0];
+        document.getElementById('p-name').value = p[1];
+        document.getElementById('p-per').value = p[2];
         document.getElementById('p-qty').focus();
     }
 
     function addItem() {
-        const item = { id: Date.now(), code: document.getElementById('p-code').value, name: document.getElementById('p-name').value, per: document.getElementById('p-per').value, qty: parseInt(document.getElementById('p-qty').value) || 0, plt: parseInt(document.getElementById('p-plt').value) || 0, exp: document.getElementById('p-exp').value };
-        if(!item.name) return alert("請輸入商品品名");
+        const item = {
+            id: Date.now(),
+            code: document.getElementById('p-code').value,
+            name: document.getElementById('p-name').value,
+            per: document.getElementById('p-per').value,
+            qty: parseInt(document.getElementById('p-qty').value) || 0,
+            plt: parseInt(document.getElementById('p-plt').value) || 0,
+            exp: document.getElementById('p-exp').value
+        };
+        if(!item.name) return alert("請輸入品名");
         items.push(item);
         if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
         saveData();
-        document.getElementById('p-qty').value = 0; document.getElementById('p-plt').value = 0; document.getElementById('p-exp').value = "";
+        document.getElementById('p-qty').value = ""; document.getElementById('p-plt').value = "";
+    }
+
+    function renderAll() {
+        const tbody = document.getElementById('table-body');
+        const manage = document.getElementById('manage-items-container');
+        tbody.innerHTML = ''; manage.innerHTML = '';
+        let tQty = 0, tPlt = 0;
+        document.getElementById('manage-section').style.display = items.length > 0 ? 'block' : 'none';
+
+        const d = document.getElementById('in-date').value;
+        const w = document.getElementById('in-day').value;
+
+        for(let i=0; i<8; i++) {
+            const it = items[i] || {};
+            const row = document.createElement('tr');
+            let dc = (i===0) ? d : (i===1 ? w : '');
+            row.innerHTML = `<td class="${i===1?'bg-yellow':''}">${dc}</td><td>${it.code||''}</td><td class="product-name">${it.name||''}</td><td>${it.per||''}</td><td>${it.qty?it.qty+'箱':''}</td><td>${it.plt?it.plt+'板':''}</td><td>${it.exp||''}</td>`;
+            tbody.appendChild(row);
+            if(it.id) {
+                tQty += it.qty; tPlt += it.plt;
+                manage.innerHTML += `<div class="manage-item"><div>${it.name} (${it.qty}箱)</div><button class="btn-del" onclick="deleteItem(${it.id})">刪除</button></div>`;
+            }
+        }
+        document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
+        document.getElementById('display-total').innerText = tQty + '箱';
+        document.getElementById('display-pallets').innerText = tPlt + '板';
+        document.getElementById('display-runs').innerText = document.getElementById('manual-runs').value + '趟';
     }
 
     function deleteItem(id) {
@@ -216,33 +232,11 @@
         saveData();
     }
 
-    function renderAll() {
-        const tbody = document.getElementById('table-body');
-        const manageBox = document.getElementById('manage-items-container');
-        tbody.innerHTML = ''; manageBox.innerHTML = '';
-        let tQty = 0, tPlt = 0;
-        document.getElementById('manage-section').style.display = items.length > 0 ? 'block' : 'none';
-        const dVal = document.getElementById('in-date').value;
-        const wVal = document.getElementById('in-day').value;
-        for(let i=0; i<8; i++) {
-            const it = items[i] || {};
-            const row = document.createElement('tr');
-            let dc = (i === 0) ? dVal : (i === 1 ? wVal : '');
-            row.innerHTML = `<td class="${i===1?'bg-yellow':''}">${dc}</td><td>${it.code||''}</td><td class="product-name">${it.name||''}</td><td>${it.per||''}</td><td>${it.qty?it.qty+'箱':''}</td><td>${it.plt?it.plt+'板':''}</td><td>${it.exp||''}</td>`;
-            tbody.appendChild(row);
-            if(it.id) { tQty += it.qty; tPlt += it.plt; manageBox.innerHTML += `<div class="manage-item"><div><b>${it.name}</b><br><small>${it.qty}箱|${it.plt}板</small></div><button class="btn-del" onclick="deleteItem(${it.id})">刪除</button></div>`; }
-        }
-        document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
-        document.getElementById('display-total').innerText = tQty + '箱';
-        document.getElementById('display-pallets').innerText = tPlt + '板';
-        document.getElementById('display-runs').innerText = document.getElementById('manual-runs').value + '趟';
-    }
-
     function manualUpdateRuns() { isManualRuns = true; renderAll(); saveData(); }
-    function toggleHelp() { const m = document.getElementById('help-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
-    function saveData() { localStorage.setItem('warehouse_data_v10', JSON.stringify({ date: document.getElementById('in-date').value, day: document.getElementById('in-day').value, plate: document.getElementById('in-plate').value, runs: document.getElementById('manual-runs').value, items: items, isManual: isManualRuns })); renderAll(); }
+    function saveData() { localStorage.setItem('warehouse_data_v11', JSON.stringify({ date: document.getElementById('in-date').value, day: document.getElementById('in-day').value, plate: document.getElementById('in-plate').value, runs: document.getElementById('manual-runs').value, items: items, isManual: isManualRuns })); renderAll(); }
+    
     function loadData() {
-        const saved = localStorage.getItem('warehouse_data_v10');
+        const saved = localStorage.getItem('warehouse_data_v11');
         if(saved) {
             const data = JSON.parse(saved);
             document.getElementById('in-date').value = data.date;
@@ -252,35 +246,84 @@
             items = data.items || [];
             isManualRuns = data.isManual || false;
         } else {
-            const nextDay = getNextWorkDay();
-            document.getElementById('in-date').value = nextDay.dateStr;
-            document.getElementById('in-day').value = nextDay.dayName;
+            let next = new Date(); next.setDate(next.getDate()+1);
+            while(next.getDay()===0 || next.getDay()===6) next.setDate(next.getDate()+1);
+            document.getElementById('in-date').value = `${next.getFullYear()}/${next.getMonth()+1}/${next.getDate()}`;
+            document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][next.getDay()];
         }
         renderAll();
     }
 
-    function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v10'); items = []; isManualRuns = false; loadData(); } }
-    function downloadImage() { html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { const link = document.createElement('a'); link.download = `運回清單.png`; link.href = canvas.toDataURL(); link.click(); }); }
-
-    function downloadExcel() {
-        const plate = document.getElementById('in-plate').value;
-        const rowData = [["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註"]];
-        for(let i=0; i<8; i++) {
-            const it = items[i] || {};
-            let d = (i === 0) ? document.getElementById('in-date').value : (i === 1 ? document.getElementById('in-day').value : "");
-            rowData.push([d, it.code||"", it.name||"", it.per||"", it.qty?it.qty+"箱":"", it.plt?it.plt+"板":"", it.exp||""]);
-        }
-        rowData.push([plate, "", "", "", "", "車趟", document.getElementById('display-pallets').innerText]);
-        rowData.push(["", "", "", "", "", "趟數", document.getElementById('display-runs').innerText]);
-        rowData.push(["", "", "", "", "", "合計", document.getElementById('display-total').innerText]);
-        const ws = XLSX.utils.aoa_to_sheet(rowData);
-        ws['!merges'] = [{ s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }];
-        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "清單");
-        XLSX.writeFile(wb, `運回報表_${plate}.xlsx`);
+    function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v11'); items = []; isManualRuns = false; loadData(); } }
+    
+    function downloadImage() {
+        const btn = event.target; btn.innerText = "產生中...";
+        html2canvas(document.getElementById('capture-area'), { scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `運回報表_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL(); link.click();
+            btn.innerText = "📸 產生圖片";
+        });
     }
-    window.onload = initAuth;
+
+    // --- 校正版 Excel 匯出：相容 GitHub Pages 與 手機下載 ---
+    function downloadExcel() {
+        try {
+            const dateVal = document.getElementById('in-date').value;
+            const dayVal = document.getElementById('in-day').value;
+            const plate = document.getElementById('in-plate').value;
+            
+            // 構建二維陣列資料
+            const data = [["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註 / 效期"]];
+            for(let i=0; i<8; i++) {
+                const it = items[i] || {};
+                data.push([
+                    (i===0)?dateVal : (i===1?dayVal:""),
+                    it.code||"", it.name||"", it.per||"",
+                    it.qty?it.qty+"箱":"", it.plt?it.plt+"板":"", it.exp||""
+                ]);
+            }
+            // 底部資訊
+            data.push([plate, "", "", "", "", "車趟", document.getElementById('display-pallets').innerText]);
+            data.push(["", "", "", "", "", "趟數", document.getElementById('display-runs').innerText]);
+            data.push(["", "", "", "", "", "合計", document.getElementById('display-total').innerText]);
+
+            // 建立工作表
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // 設定合併儲存格 (!merges)
+            ws['!merges'] = [
+                { s: { r: 9, c: 0 }, e: { r: 11, c: 4 } } // 合併 A10:E12 (車牌框)
+            ];
+
+            // 設定欄寬
+            ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+            // 使用 XLSX.write 並建立 Blob，確保 GitHub Pages 下載相容性
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+            function s2ab(s) {
+                const buf = new ArrayBuffer(s.length);
+                const view = new Uint8Array(buf);
+                for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+            const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `運回清單_${plate}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (e) {
+            alert("Excel 產生失敗，請檢查網路連線或稍後再試。錯誤資訊：" + e.message);
+        }
+    }
 </script>
 </body>
 </html>
