@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>外倉商品預計運回商品表單</title>
+    <!-- 使用穩定 CDN 連結 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         :root { --border-color: #333; --primary-color: #3498db; --secondary-color: #2ecc71; --accent-color: #e67e22; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f3f5; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f9; margin: 0; padding: 10px; color: #333; -webkit-tap-highlight-color: transparent; }
         
+        /* 驗證層 */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #2c3e50; display: none; flex-direction: column;
@@ -21,11 +23,13 @@
         .login-box input { padding: 15px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; outline: none; }
         .login-box button { padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
 
+        /* 主容器 */
         .app-container { max-width: 1000px; margin: 0 auto; padding-bottom: 50px; display: none; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         header h2 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
         .btn-help { background: var(--accent-color); color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; font-weight: bold;}
 
+        /* 手冊彈窗 */
         #help-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; padding: 20px; }
         .help-content { background: white; width: 100%; max-width: 450px; max-height: 80vh; overflow-y: auto; border-radius: 15px; padding: 25px; position: relative; }
         .help-content h3 { margin-top: 0; color: var(--accent-color); border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -49,6 +53,7 @@
         .btn-xlsx { background: #217346; color: white; padding: 15px; border:none; border-radius: 10px; font-weight: bold;}
         .btn-reset { background: #95a5a6; color: white; grid-column: span 2; margin-top: 10px; padding: 12px; font-size: 0.9rem; border:none; border-radius: 10px;}
 
+        /* 表格預覽 */
         .preview-container { overflow-x: auto; background: #ddd; padding: 10px; border-radius: 12px; margin-top: 20px; }
         #capture-area { width: 1000px; background: white; padding: 40px; margin: 0 auto; }
         .main-table { width: 100%; border-collapse: collapse; border: 2px solid var(--border-color); font-size: 18px; }
@@ -66,16 +71,19 @@
 </head>
 <body>
 
+<!-- 操作手冊彈窗 -->
 <div id="help-modal">
     <div class="help-content">
         <h3>📖 操作說明手冊</h3>
-        <p><b>1. 認證：</b>輸入密碼 <b>888</b>，當天登入後隔日才需重登。</p>
-        <p><b>2. 日期：</b>自動預設下個工作天。手改日期後星期會同步。</p>
-        <p><b>3. Excel 匯出：</b>匯出格式已優化為圖檔結構，包含最下方的合併車牌框。</p>
-        <button class="help-close" onclick="toggleHelp()">關閉</button>
+        <p><b>1. 當日免登入：</b>輸入 <b>888</b> 後，當天刷新網頁無需重登，隔日自動失效。</p>
+        <p><b>2. 智慧日期：</b>預設下一個工作天，改日期後星期自動跳轉。</p>
+        <p><b>3. 車趟計算：</b>預設 8 板為 1 趟，可點擊黃色框手動覆蓋數值。</p>
+        <p><b>4. Excel 匯出：</b>匯出之 Excel 採合併單元格設計，排版與圖檔一致。</p>
+        <button class="help-close" onclick="toggleHelp()">關閉說明</button>
     </div>
 </div>
 
+<!-- 登入介面 -->
 <div id="login-overlay">
     <div class="login-box">
         <h2>外倉預計運回系統</h2>
@@ -106,7 +114,7 @@
                 <input type="text" id="in-plate" value="KLF-0535" oninput="saveData()">
             </div>
             <div class="input-group">
-                <label>最終趟數</label>
+                <label>最終趟數 (手改)</label>
                 <input type="number" id="manual-runs" class="highlight-input" value="1" oninput="manualUpdateRuns()">
             </div>
         </div>
@@ -117,14 +125,14 @@
         <div class="input-group" style="margin-bottom:15px">
             <label>快速選擇商品</label>
             <select id="p-preset" onchange="applyPreset()">
-                <option value="">-- 選擇品項 --</option>
-                <option value="|黑糖珍珠|40">★ 黑糖珍珠</option>
-                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊</option>
-                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙</option>
-                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙</option>
-                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g</option>
-                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g</option>
-                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲</option>
+                <option value="">-- 快速品項選擇 --</option>
+                <option value="|黑糖珍珠|40">★ 黑糖珍珠 (規格 40)</option>
+                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (規格 40)</option>
+                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (規格 90)</option>
+                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (規格 90)</option>
+                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g (補規格)</option>
+                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補規格)</option>
+                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (規格 28)</option>
                 <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
                 <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
             </select>
@@ -138,12 +146,17 @@
             <div class="input-group"><label>箱數</label><input type="number" id="p-qty" value="0"></div>
             <div class="input-group"><label>板數</label><input type="number" id="p-plt" value="0"></div>
         </div>
-        <div class="input-group" style="margin-top:10px"><textarea id="p-exp" rows="2" placeholder="備註/效期"></textarea></div>
-        <div class="actions" style="margin-top:15px"><button class="btn-add" onclick="addItem()">+ 加入清單</button></div>
+        <div class="input-group" style="margin-top:10px">
+            <label>備註 / 效期</label>
+            <textarea id="p-exp" rows="2" placeholder="例：拉回效期 2027/12/06"></textarea>
+        </div>
+        <div class="actions" style="margin-top:15px">
+            <button class="btn-add" onclick="addItem()">+ 加入目前報表</button>
+        </div>
     </div>
 
     <div class="card" id="manage-section" style="display:none">
-        <span class="card-title">3. 項目管理</span>
+        <span class="card-title">3. 項目管理 (點擊刪除)</span>
         <div id="manage-items-container"></div>
     </div>
 
@@ -179,18 +192,30 @@
     let items = [];
     let isManualRuns = false;
 
+    // --- 初始化驗證 ---
     function initAuth() {
-        const today = new Date().toLocaleDateString();
-        const lastAuth = localStorage.getItem('auth_date_v7');
-        if (lastAuth === today) showMain();
-        else document.getElementById('login-overlay').style.display = 'flex';
+        // 使用固定的 YYYY-MM-DD 格式避免裝置差異
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+        const lastAuth = localStorage.getItem('auth_date_v8');
+        
+        if (lastAuth === todayStr) {
+            showMain();
+        } else {
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
     }
 
     function checkPassword() {
         if(document.getElementById('pw-input').value === '888') {
-            localStorage.setItem('auth_date_v7', new Date().toLocaleDateString());
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+            localStorage.setItem('auth_date_v8', todayStr);
             showMain();
-        } else { alert('密碼錯誤！'); }
+        } else {
+            alert('密碼驗證失敗！');
+            document.getElementById('pw-input').value = '';
+        }
     }
 
     function showMain() {
@@ -199,39 +224,67 @@
         loadData();
     }
 
+    // --- 日期計算 ---
     function getNextWorkDay() {
         let date = new Date();
         const holidays = ["2026/01/01", "2026/02/28", "2026/04/04", "2026/04/05", "2026/05/01", "2026/10/10"]; 
-        do { date.setDate(date.getDate() + 1); } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
-        return { dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`, dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()] };
+        do {
+            date.setDate(date.getDate() + 1);
+        } while (date.getDay() === 0 || date.getDay() === 6 || holidays.includes(`${date.getFullYear()}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getDate().toString().padStart(2,'0')}`));
+        
+        return { 
+            dateStr: `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`,
+            dayName: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][date.getDay()]
+        };
     }
 
     function handleDateChange() {
-        const dObj = new Date(document.getElementById('in-date').value);
-        if(!isNaN(dObj.getTime())) document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
+        const dStr = document.getElementById('in-date').value;
+        const dObj = new Date(dStr);
+        if(!isNaN(dObj.getTime())) {
+            document.getElementById('in-day').value = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"][dObj.getDay()];
+        }
         saveData();
     }
 
+    // --- 核心操作 ---
     function applyPreset() {
-        const [code, name, per] = document.getElementById('p-preset').value.split('|');
-        document.getElementById('p-code').value = code || "";
-        document.getElementById('p-name').value = name || "";
-        document.getElementById('p-per').value = per || 0;
+        const select = document.getElementById('p-preset');
+        if (!select.value) return;
+        const parts = select.value.split('|');
+        document.getElementById('p-code').value = parts[0] || "";
+        document.getElementById('p-name').value = parts[1] || "";
+        document.getElementById('p-per').value = parts[2] || 0;
         document.getElementById('p-qty').focus();
     }
 
     function addItem() {
-        const item = { id: Date.now(), code: document.getElementById('p-code').value, name: document.getElementById('p-name').value, per: document.getElementById('p-per').value, qty: parseInt(document.getElementById('p-qty').value) || 0, plt: parseInt(document.getElementById('p-plt').value) || 0, exp: document.getElementById('p-exp').value };
-        if(!item.name) return alert("請輸入商品名稱");
+        const item = {
+            id: Date.now(),
+            code: document.getElementById('p-code').value,
+            name: document.getElementById('p-name').value,
+            per: document.getElementById('p-per').value,
+            qty: parseInt(document.getElementById('p-qty').value) || 0,
+            plt: parseInt(document.getElementById('p-plt').value) || 0,
+            exp: document.getElementById('p-exp').value
+        };
+        if(!item.name) return alert("請輸入商品品名");
         items.push(item);
-        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        
+        if(!isManualRuns) {
+            document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        }
         saveData();
-        document.getElementById('p-qty').value = 0; document.getElementById('p-plt').value = 0; document.getElementById('p-exp').value = "";
+        document.getElementById('p-qty').value = 0;
+        document.getElementById('p-plt').value = 0;
+        document.getElementById('p-exp').value = "";
     }
 
     function deleteItem(id) {
         items = items.filter(i => i.id !== id);
-        if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        if(!isManualRuns) {
+            document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
+        }
         saveData();
     }
 
@@ -240,16 +293,37 @@
         const manageBox = document.getElementById('manage-items-container');
         tbody.innerHTML = ''; manageBox.innerHTML = '';
         let tQty = 0, tPlt = 0;
+        
         document.getElementById('manage-section').style.display = items.length > 0 ? 'block' : 'none';
+
+        const dVal = document.getElementById('in-date').value;
+        const wVal = document.getElementById('in-day').value;
 
         for(let i=0; i<8; i++) {
             const item = items[i] || {};
             const row = document.createElement('tr');
-            let dateCol = (i === 0) ? document.getElementById('in-date').value : (i === 1 ? document.getElementById('in-day').value : '');
+            let dateCol = (i === 0) ? dVal : (i === 1 ? wVal : '');
             let dateClass = (i === 1) ? 'bg-yellow' : '';
-            row.innerHTML = `<td class="${dateClass}">${dateCol}</td><td>${item.code || ''}</td><td class="product-name">${item.name || ''}</td><td>${item.per || ''}</td><td>${item.qty ? item.qty + '箱' : ''}</td><td>${item.plt ? item.plt + '板' : ''}</td><td class="expiry-cell">${item.exp || ''}</td>`;
+
+            row.innerHTML = `
+                <td class="${dateClass}">${dateCol}</td>
+                <td>${item.code || ''}</td>
+                <td class="product-name">${item.name || ''}</td>
+                <td>${item.per || ''}</td>
+                <td>${item.qty ? item.qty + '箱' : ''}</td>
+                <td>${item.plt ? item.plt + '板' : ''}</td>
+                <td class="expiry-cell">${item.exp || ''}</td>
+            `;
             tbody.appendChild(row);
-            if(item.id) { tQty += item.qty; tPlt += item.plt; manageBox.innerHTML += `<div class="manage-item"><div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div><button class="btn-del" onclick="deleteItem(${item.id})">刪除</button></div>`; }
+
+            if(item.id) {
+                tQty += item.qty; tPlt += item.plt;
+                manageBox.innerHTML += `
+                    <div class="manage-item">
+                        <div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div>
+                        <button class="btn-del" onclick="deleteItem(${item.id})">刪除</button>
+                    </div>`;
+            }
         }
         document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
         document.getElementById('display-total').innerText = tQty + '箱';
@@ -258,16 +332,26 @@
     }
 
     function manualUpdateRuns() { isManualRuns = true; renderAll(); saveData(); }
-    function toggleHelp() { const m = document.getElementById('help-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
-    function saveData() { localStorage.setItem('warehouse_data_v7', JSON.stringify({ date: document.getElementById('in-date').value, day: document.getElementById('in-day').value, plate: document.getElementById('in-plate').value, runs: document.getElementById('manual-runs').value, items: items, isManual: isManualRuns })); renderAll(); }
+    function saveData() {
+        localStorage.setItem('warehouse_data_v8', JSON.stringify({
+            date: document.getElementById('in-date').value,
+            day: document.getElementById('in-day').value,
+            plate: document.getElementById('in-plate').value,
+            runs: document.getElementById('manual-runs').value,
+            items: items,
+            isManual: isManualRuns
+        }));
+        renderAll();
+    }
+
     function loadData() {
-        const saved = localStorage.getItem('warehouse_data_v7');
+        const saved = localStorage.getItem('warehouse_data_v8');
         if(saved) {
             const data = JSON.parse(saved);
-            document.getElementById('in-date').value = data.date;
-            document.getElementById('in-day').value = data.day;
-            document.getElementById('in-plate').value = data.plate;
-            document.getElementById('manual-runs').value = data.runs;
+            document.getElementById('in-date').value = data.date || "";
+            document.getElementById('in-day').value = data.day || "";
+            document.getElementById('in-plate').value = data.plate || "KLF-0535";
+            document.getElementById('manual-runs').value = data.runs || 1;
             items = data.items || [];
             isManualRuns = data.isManual || false;
         } else {
@@ -278,74 +362,57 @@
         renderAll();
     }
 
-    function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v7'); items = []; isManualRuns = false; loadData(); } }
-    
-    function downloadImage() { 
-        html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { 
-            const link = document.createElement('a'); 
-            link.download = `運回清單.png`; 
-            link.href = canvas.toDataURL(); 
-            link.click(); 
-        }); 
+    function clearAllData() {
+        if(confirm("確定要清空所有資料嗎？")) {
+            localStorage.removeItem('warehouse_data_v8');
+            items = []; isManualRuns = false;
+            loadData();
+        }
     }
 
-    // --- 改良版 Excel 匯出功能：對齊圖檔結構 ---
+    function toggleHelp() {
+        const m = document.getElementById('help-modal');
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function downloadImage() {
+        html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `運回清單.png`;
+            link.href = canvas.toDataURL(); link.click();
+        });
+    }
+
+    // --- 改良 Excel 匯出：包含單元格合併 ---
     function downloadExcel() {
-        const dateVal = document.getElementById('in-date').value;
-        const dayVal = document.getElementById('in-day').value;
-        const plateVal = document.getElementById('in-plate').value;
-        const runsVal = document.getElementById('display-runs').innerText;
-        const totalPltVal = document.getElementById('display-pallets').innerText;
-        const totalQtyVal = document.getElementById('display-total').innerText;
-
-        // 1. 建立標題列
-        const excelData = [
-            ["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註 / 效期"]
-        ];
-
-        // 2. 填入 8 行資料 (包含日期與星期)
+        const dVal = document.getElementById('in-date').value;
+        const wVal = document.getElementById('in-day').value;
+        const plate = document.getElementById('in-plate').value;
+        const rowData = [["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註 / 效期"]];
+        
         for(let i=0; i<8; i++) {
-            const item = items[i] || {};
-            let dCol = (i === 0) ? dateVal : (i === 1 ? dayVal : "");
-            excelData.push([
-                dCol,
-                item.code || "",
-                item.name || "",
-                item.per || "",
-                item.qty ? item.qty + "箱" : "",
-                item.plt ? item.plt + "板" : "",
-                item.exp || ""
-            ]);
+            const it = items[i] || {};
+            let dCol = (i === 0) ? dVal : (i === 1 ? wVal : "");
+            rowData.push([dCol, it.code || "", it.name || "", it.per || "", it.qty?it.qty+"箱":"", it.plt?it.plt+"板":"", it.exp || ""]);
         }
 
-        // 3. 填入底部資訊 (對應圖檔右下角結構)
-        // 第 10 行: [A-E 合併]車牌, [F]車趟, [G]總板數
-        excelData.push([plateVal, "", "", "", "", "車趟", totalPltVal]);
-        // 第 11 行: [A-E 空白], [F]趟數, [G]總趟數
-        excelData.push(["", "", "", "", "", "趟數", runsVal]);
-        // 第 12 行: [A-E 空白], [F]合計, [G]總箱數
-        excelData.push(["", "", "", "", "", "合計", totalQtyVal]);
+        // 底部合併車牌區
+        rowData.push([plate, "", "", "", "", "車趟", document.getElementById('display-pallets').innerText]);
+        rowData.push(["", "", "", "", "", "趟數", document.getElementById('display-runs').innerText]);
+        rowData.push(["", "", "", "", "", "合計", document.getElementById('display-total').innerText]);
 
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-        // 4. 設定單元格合併 (!merges)
-        // 格式: { s: {r: 開始列, c: 開始欄}, e: {r: 結束列, c: 結束欄} } (索引從0開始)
-        ws['!merges'] = [
-            // 車牌區域合併: 從第 9 列(10行)到第 11 列(12行)，第 0 欄(A)到第 4 欄(E)
-            { s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }
-        ];
-
-        // 5. 設定欄寬 (美觀用)
-        ws['!cols'] = [
-            { wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }
-        ];
-
+        const ws = XLSX.utils.aoa_to_sheet(rowData);
+        ws['!merges'] = [{ s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }]; // 合併 A10:E12
+        ws['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }];
+        
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "運回清單");
-        XLSX.writeFile(wb, `運回報表_${plateVal}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "清單");
+        XLSX.writeFile(wb, `運回報表_${plate}.xlsx`);
     }
 
+    // 啟動檢測
     window.onload = initAuth;
 </script>
+
 </body>
 </html>
