@@ -57,7 +57,7 @@
         .product-name { text-align: left; padding-left: 15px !important; width: 280px; }
         .expiry-cell { font-size: 13px; text-align: left; vertical-align: top; white-space: pre-line; width: 210px; line-height: 1.3;}
         .footer-info { display: flex; border: 2px solid var(--border-color); border-top: none; }
-        .footer-left { flex: 3; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center;}
+        .footer-left { flex: 5; border-right: 1px solid var(--border-color); padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center;}
         .footer-right { flex: 2; }
         .footer-right table { width: 100%; border-collapse: collapse; }
         .footer-right td { border: 1px solid var(--border-color); padding: 8px; text-align: center; height: 38px;}
@@ -70,9 +70,8 @@
     <div class="help-content">
         <h3>📖 操作說明手冊</h3>
         <p><b>1. 認證：</b>輸入密碼 <b>888</b>，當天登入後隔日才需重登。</p>
-        <p><b>2. 日期：</b>自動預設次一工作天。手改日期後星期會同步。</p>
-        <p><b>3. 選項：</b>選單可快速填入商品。無代碼品項請於選取後手動補填。</p>
-        <p><b>4. 趟數：</b>8板一車，黃色欄位可手動覆蓋。</p>
+        <p><b>2. 日期：</b>自動預設下個工作天。手改日期後星期會同步。</p>
+        <p><b>3. Excel 匯出：</b>匯出格式已優化為圖檔結構，包含最下方的合併車牌框。</p>
         <button class="help-close" onclick="toggleHelp()">關閉</button>
     </div>
 </div>
@@ -116,25 +115,17 @@
     <div class="card">
         <span class="card-title">2. 商品登打</span>
         <div class="input-group" style="margin-bottom:15px">
-            <label>快速選擇商品 (代號空白品項選取後請補填)</label>
+            <label>快速選擇商品</label>
             <select id="p-preset" onchange="applyPreset()">
-                <option value="">-- 手動輸入或選擇品項 --</option>
-                <!-- 新增品項區 (代號空白) -->
-                <option value="|黑糖珍珠|40">★ 黑糖珍珠 (代號補填)</option>
-                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊 (代號補填)</option>
-                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙 (代號補填)</option>
-                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙 (代號補填)</option>
-                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-香草風味110g (補代號/規格)</option>
-                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g (補代號/規格)</option>
-                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲 (補代號)</option>
-
-                <!-- 歷史不重複品項 -->
+                <option value="">-- 選擇品項 --</option>
+                <option value="|黑糖珍珠|40">★ 黑糖珍珠</option>
+                <option value="|ICW WALKER冰塊|40">★ ICW WALKER冰塊</option>
+                <option value="|刨走族芒果風味冰沙|90">★ 刨走族芒果風味冰沙</option>
+                <option value="|刨走族烏梅風味冰沙|90">★ 刨走族烏梅風味冰沙</option>
+                <option value="|統一冰淇淋-香草風味110g|0">★ 統一冰淇淋-110g</option>
+                <option value="|統一香草杯 80g|0">★ 統一香草杯 80g</option>
+                <option value="|(新)手工高麗菜捲|28">★ (新)手工高麗菜捲</option>
                 <option value="0006|冰戀雪捲牛奶|63">0006 - 冰戀雪捲牛奶 (63)</option>
-                <option value="0006|冰戀雪捲牛奶|54">0006 - 冰戀雪捲牛奶 (54)</option>
-                <option value="0011|統一香草杯裝110g|135">0011 - 統一香草杯裝110g (135)</option>
-                <option value="0011|統一香草杯裝110g|29">0011 - 統一香草杯裝110g (29)</option>
-                <option value="160060|甜玉米|30">160060 - 甜玉米 (30)</option>
-                <option value="160066|黃金魚板|28">160066 - 黃金魚板 (28)</option>
                 <option value="160067|米血糕|28">160067 - 米血糕 (28)</option>
             </select>
         </div>
@@ -147,16 +138,12 @@
             <div class="input-group"><label>箱數</label><input type="number" id="p-qty" value="0"></div>
             <div class="input-group"><label>板數</label><input type="number" id="p-plt" value="0"></div>
         </div>
-        <div class="input-group" style="margin-top:10px">
-            <textarea id="p-exp" rows="2" placeholder="備註/效期 (例如:拉回效期 2027/12/06)"></textarea>
-        </div>
-        <div class="actions" style="margin-top:15px">
-            <button class="btn-add" onclick="addItem()">+ 加入目前清單</button>
-        </div>
+        <div class="input-group" style="margin-top:10px"><textarea id="p-exp" rows="2" placeholder="備註/效期"></textarea></div>
+        <div class="actions" style="margin-top:15px"><button class="btn-add" onclick="addItem()">+ 加入清單</button></div>
     </div>
 
     <div class="card" id="manage-section" style="display:none">
-        <span class="card-title">3. 項目管理 (點擊刪除)</span>
+        <span class="card-title">3. 項目管理</span>
         <div id="manage-items-container"></div>
     </div>
 
@@ -175,12 +162,12 @@
                 <tbody id="table-body"></tbody>
             </table>
             <div class="footer-info">
-                <div class="footer-left"><div id="display-plate" style="font-size: 28px; font-weight: bold;">-</div></div>
+                <div class="footer-left"><div id="display-plate" style="font-size: 32px; font-weight: bold; letter-spacing: 2px;">-</div></div>
                 <div class="footer-right">
                     <table>
-                        <tr><td style="width: 60px;">車趟</td><td id="display-pallets">0板</td></tr>
-                        <tr><td>趟數</td><td id="display-runs" style="font-weight: bold; color: #d35400;">1趟</td></tr>
-                        <tr><td>合計</td><td id="display-total" style="font-weight: bold;">0箱</td></tr>
+                        <tr><td style="width: 70px; background: #f9f9f9;">車趟</td><td id="display-pallets">0板</td></tr>
+                        <tr><td style="background: #f9f9f9;">趟數</td><td id="display-runs" style="font-weight: bold; color: #d35400;">1趟</td></tr>
+                        <tr><td style="background: #f9f9f9;">合計</td><td id="display-total" style="font-weight: bold;">0箱</td></tr>
                     </table>
                 </div>
             </div>
@@ -203,7 +190,7 @@
         if(document.getElementById('pw-input').value === '888') {
             localStorage.setItem('auth_date_v7', new Date().toLocaleDateString());
             showMain();
-        } else { alert('密碼錯誤！'); document.getElementById('pw-input').value = ''; }
+        } else { alert('密碼錯誤！'); }
     }
 
     function showMain() {
@@ -234,15 +221,7 @@
     }
 
     function addItem() {
-        const item = {
-            id: Date.now(),
-            code: document.getElementById('p-code').value,
-            name: document.getElementById('p-name').value,
-            per: document.getElementById('p-per').value,
-            qty: parseInt(document.getElementById('p-qty').value) || 0,
-            plt: parseInt(document.getElementById('p-plt').value) || 0,
-            exp: document.getElementById('p-exp').value
-        };
+        const item = { id: Date.now(), code: document.getElementById('p-code').value, name: document.getElementById('p-name').value, per: document.getElementById('p-per').value, qty: parseInt(document.getElementById('p-qty').value) || 0, plt: parseInt(document.getElementById('p-plt').value) || 0, exp: document.getElementById('p-exp').value };
         if(!item.name) return alert("請輸入商品名稱");
         items.push(item);
         if(!isManualRuns) document.getElementById('manual-runs').value = Math.ceil(items.reduce((s,i)=>s+i.plt,0) / 8) || 1;
@@ -270,10 +249,7 @@
             let dateClass = (i === 1) ? 'bg-yellow' : '';
             row.innerHTML = `<td class="${dateClass}">${dateCol}</td><td>${item.code || ''}</td><td class="product-name">${item.name || ''}</td><td>${item.per || ''}</td><td>${item.qty ? item.qty + '箱' : ''}</td><td>${item.plt ? item.plt + '板' : ''}</td><td class="expiry-cell">${item.exp || ''}</td>`;
             tbody.appendChild(row);
-            if(item.id) {
-                tQty += item.qty; tPlt += item.plt;
-                manageBox.innerHTML += `<div class="manage-item"><div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div><button class="btn-del" onclick="deleteItem(${item.id})">刪除</button></div>`;
-            }
+            if(item.id) { tQty += item.qty; tPlt += item.plt; manageBox.innerHTML += `<div class="manage-item"><div><b>${item.name}</b><br><small>${item.qty}箱 | ${item.plt}板</small></div><button class="btn-del" onclick="deleteItem(${item.id})">刪除</button></div>`; }
         }
         document.getElementById('display-plate').innerText = document.getElementById('in-plate').value;
         document.getElementById('display-total').innerText = tQty + '箱';
@@ -303,12 +279,72 @@
     }
 
     function clearAllData() { if(confirm("確定清空嗎？")) { localStorage.removeItem('warehouse_data_v7'); items = []; isManualRuns = false; loadData(); } }
-    function downloadImage() { html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { const link = document.createElement('a'); link.download = `運回清單.png`; link.href = canvas.toDataURL(); link.click(); }); }
-    function downloadExcel() {
-        const excelData = [["取貨日", "代碼", "品名", "板箱", "箱數", "板數", "備註"]];
-        items.forEach((item, index) => { let d = (index === 0) ? document.getElementById('in-date').value : (index === 1 ? document.getElementById('in-day').value : ""); excelData.push([d, item.code, item.name, item.per, item.qty, item.plt, item.exp]); });
-        const ws = XLSX.utils.aoa_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "清單"); XLSX.writeFile(wb, `報表.xlsx`);
+    
+    function downloadImage() { 
+        html2canvas(document.getElementById('capture-area'), { scale: 2 }).then(canvas => { 
+            const link = document.createElement('a'); 
+            link.download = `運回清單.png`; 
+            link.href = canvas.toDataURL(); 
+            link.click(); 
+        }); 
     }
+
+    // --- 改良版 Excel 匯出功能：對齊圖檔結構 ---
+    function downloadExcel() {
+        const dateVal = document.getElementById('in-date').value;
+        const dayVal = document.getElementById('in-day').value;
+        const plateVal = document.getElementById('in-plate').value;
+        const runsVal = document.getElementById('display-runs').innerText;
+        const totalPltVal = document.getElementById('display-pallets').innerText;
+        const totalQtyVal = document.getElementById('display-total').innerText;
+
+        // 1. 建立標題列
+        const excelData = [
+            ["取貨日", "商品代號", "隆興載回貨品名稱", "板箱數", "數量", "板數", "備註 / 效期"]
+        ];
+
+        // 2. 填入 8 行資料 (包含日期與星期)
+        for(let i=0; i<8; i++) {
+            const item = items[i] || {};
+            let dCol = (i === 0) ? dateVal : (i === 1 ? dayVal : "");
+            excelData.push([
+                dCol,
+                item.code || "",
+                item.name || "",
+                item.per || "",
+                item.qty ? item.qty + "箱" : "",
+                item.plt ? item.plt + "板" : "",
+                item.exp || ""
+            ]);
+        }
+
+        // 3. 填入底部資訊 (對應圖檔右下角結構)
+        // 第 10 行: [A-E 合併]車牌, [F]車趟, [G]總板數
+        excelData.push([plateVal, "", "", "", "", "車趟", totalPltVal]);
+        // 第 11 行: [A-E 空白], [F]趟數, [G]總趟數
+        excelData.push(["", "", "", "", "", "趟數", runsVal]);
+        // 第 12 行: [A-E 空白], [F]合計, [G]總箱數
+        excelData.push(["", "", "", "", "", "合計", totalQtyVal]);
+
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+        // 4. 設定單元格合併 (!merges)
+        // 格式: { s: {r: 開始列, c: 開始欄}, e: {r: 結束列, c: 結束欄} } (索引從0開始)
+        ws['!merges'] = [
+            // 車牌區域合併: 從第 9 列(10行)到第 11 列(12行)，第 0 欄(A)到第 4 欄(E)
+            { s: { r: 9, c: 0 }, e: { r: 11, c: 4 } }
+        ];
+
+        // 5. 設定欄寬 (美觀用)
+        ws['!cols'] = [
+            { wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "運回清單");
+        XLSX.writeFile(wb, `運回報表_${plateVal}.xlsx`);
+    }
+
     window.onload = initAuth;
 </script>
 </body>
